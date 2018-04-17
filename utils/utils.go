@@ -23,63 +23,92 @@ type Ports struct {
 	Regex string
 }
 
-// Configuration for logs
-type Configuration struct {
+// Config for logs
+type Config struct {
 	WhiteListIPS         []string
 	OutputLog            string
 	QueryIntervalSeconds string
 	SearchLogs           []Ports
 }
 
+// Firewall
+type Firewall struct {
+	Config  Config
+	LogData [][]byte
+	Events  []string
+	BadIP   []map[string]int
+}
+
 // Reads info from config file
-func ReadConfig(file string) Configuration {
+func ReadConfig(file string) Config {
 
 	f, _ := os.Open(file)
 	defer f.Close()
 	decoder := json.NewDecoder(f)
-	configuration := Configuration{}
-	err := decoder.Decode(&configuration)
+	Config := Config{}
+	err := decoder.Decode(&Config)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Println(configuration.WhiteListIPS)
-	return configuration
+	fmt.Println(Config.WhiteListIPS)
+	return Config
 
 }
 
 // Read
-func Read(file string) ([]byte, error, int) {
+func (fw *Firewall) Read() {
 
-	f, err := os.Open(file)
-	if err != nil {
-		return []byte{}, err, 0
+	fw.LogData = [][]byte{}
+	for _, slog := range fw.Config.SearchLogs {
 
+		f, err := os.Open(slog.Log)
+		if err != nil {
+
+			fw.LogData = append(fw.LogData, []byte{})
+			log.Printf("Error Opening file" +
+				" in read Read")
+			continue
+
+		}
+
+		b := make([]byte, MaxFileSize)
+		n, err := f.Read(b)
+		if err != nil {
+			fw.LogData = append(fw.LogData, []byte{})
+			log.Printf("Error Reading file" +
+				" in read Read")
+			continue
+		}
+		fw.LogData = append(fw.LogData, b[0:n])
 	}
 
-	b := make([]byte, MaxFileSize)
-	n, err := f.Read(b)
-
-	return b[0:n], err, n
 }
 
 // Parse
-func Parse(b []byte) map[string]int {
+func (fw *Firewall) Parse() {
 
-	re := regexp.MustCompile(
-		".*Invalid user.* ([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)")
+	fw.BadIP = []map[string]int{}
 
-	ips := map[string]int{}
+	for idx, b := range fw.LogData {
 
-	lines := strings.Split(string(b), "\n")
-	for _, line := range lines {
-		list := re.FindStringSubmatch(line)
+		regxString := fw.Config.SearchLogs[idx].Regex
+		re := regexp.MustCompile(
+			regxString)
 
-		if len(list) == 2 {
-			ips[list[1]] += 1
+		ips := map[string]int{}
+		lines := strings.Split(string(b), "\n")
+		for _, line := range lines {
+			list := re.FindStringSubmatch(line)
+
+			if len(list) == 2 {
+				ips[list[1]] += 1
+			}
+
 		}
 
+		fw.BadIP = append(fw.BadIP, ips)
 	}
-	return ips
+
 }
 
 // Cmd to execute

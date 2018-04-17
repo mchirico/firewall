@@ -1,15 +1,15 @@
 {
   "WhiteListIPS": ["102.29.34.4","102.29.34.4"],
-  "OutputLog": "/var/log/firewall.log",
+  "OutputLog": "../fixtures/firewall.log",
   "QueryIntervalSeconds": "34",
   "SearchLogs":[
     {
-      "Log": "/var/log/auth.log",
+      "Log": "../fixtures/auth.log",
       "Ports":[22,25,80,443],
       "Regex": ".*Invalid user.* ([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)"
     },
     {
-      "Log": "/var/log/mail.log",
+      "Log": "../fixtures/mail.log",
       "Ports":[25],
       "Regex": ".*Invalid user.* ([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)"
     }

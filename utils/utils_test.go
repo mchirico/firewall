@@ -1,34 +1,32 @@
 package utils
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestRead(t *testing.T) {
 
-	b, err, n := Read("../fixtures/auth.log")
-	if err != nil {
-		t.Errorf("Error reading file")
+	c := ReadConfig("../fixtures/config.json")
+	fw := &Firewall{Config: c}
+	fw.Read()
+
+	if "Apr 15 06:26:29 t sshd[12223]:" != string(fw.LogData[0][0:30]) {
+		t.Fatalf("Cannot read log file")
 	}
 
-	if n != 2667332 {
-		t.Errorf("Can't read all bytes. "+
-			"Expecing %d got %d", 2667332, n)
-	}
-	fmt.Printf("b:%d  %s\n", n, string(b[0:3]))
 }
 
 func TestParse(t *testing.T) {
 
-	b, _, _ := Read("../fixtures/auth.log")
-	m := Parse(b)
-	//for k,v := range m {
-	//	fmt.Printf("%v:%v\n",k,v)
-	//}
-	if m["163.172.119.161"] != 2 {
+	c := ReadConfig("../fixtures/config.json")
+	fw := &Firewall{Config: c}
+	fw.Read()
+	fw.Parse()
+
+	if fw.BadIP[0]["163.172.119.161"] != 2 {
 		t.Errorf(("Didn't read entries"))
 	}
+
 }
 
 func TestCmd(t *testing.T) {
@@ -44,13 +42,13 @@ func TestReadConfig(t *testing.T) {
 		t.Errorf(("Error can't get ip"))
 	}
 
-	if c.SearchLogs[1].Log != "/var/log/mail.log" {
+	if c.SearchLogs[1].Log != "../fixtures/mail.log" {
 		t.Errorf(("Error in search logs"))
 	}
 	if c.SearchLogs[1].Ports[0] != 25 {
 		t.Errorf(("Error in search log port"))
 	}
-	if c.SearchLogs[1].Regex != ".*Invalid user.* " +
+	if c.SearchLogs[1].Regex != ".*Invalid user.* "+
 		"([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)" {
 		t.Errorf(("Error in search log regex"))
 	}
