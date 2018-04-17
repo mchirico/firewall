@@ -1,0 +1,16 @@
+{
+  "WhiteListIPS": ["102.29.34.4","102.29.34.4"],
+  "OutputLog": "/var/log/firewall.log",
+  "QueryIntervalSeconds": "34",
+  "SearchLogs":[
+    {
+      "Log": "/var/log/auth.log",
+      "Ports":[22,25,80,443]
+    },
+    {
+      "Log": "/var/log/mail.log",
+      "Ports":[25]
+    }
+
+  ]
+}

@@ -1,0 +1,35 @@
+language: go
+sudo: required
+dist: trusty
+go:
+- '1.10'
+os:
+- linux
+install:
+- go get github.com/stretchr/testify/assert
+
+
+script:
+- go test -race -v -coverprofile=c0.out -cpuprofile cpu.prof -memprofile mem.prof -covermode=atomic github.com/mchirico/firewall/utils
+
+# No tests at this moment
+# - go test -race -v -coverprofile=c1.out -covermode=atomic github.com/mchirico/gcpso/utils
+
+
+before_install:
+- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+- chmod +x ./cc-test-reporter
+- ./cc-test-reporter before-build
+
+
+after_success:
+- cat c0.out c1.out > c.out
+- cp c.out coverage.txt
+- bash <(curl -s https://codecov.io/bash)
+- ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+
+
+
+
+
+
