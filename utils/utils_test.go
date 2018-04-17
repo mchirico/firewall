@@ -50,5 +50,9 @@ func TestReadConfig(t *testing.T) {
 	if c.SearchLogs[1].Ports[0] != 25 {
 		t.Errorf(("Error in search log port"))
 	}
+	if c.SearchLogs[1].Regex != ".*Invalid user.* " +
+		"([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)" {
+		t.Errorf(("Error in search log regex"))
+	}
 
 }

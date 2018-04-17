@@ -20,6 +20,7 @@ var MaxFileSize = 500000000
 type Ports struct {
 	Log   string
 	Ports []int
+	Regex string
 }
 
 // Configuration for logs
