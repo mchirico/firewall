@@ -26,7 +26,9 @@ func TestBackground(t *testing.T) {
 
 
 	m := NewMC(file)
-	cmd := OpenWatcher(m.logTest,testCheckLog,file)
+	cmd := OpenWatcher(m.WriteEvent,m.AllEvents,
+		m.Tick,file)
+
 	cmd.Watcher()
 
 	if m.Count() != 0 {
