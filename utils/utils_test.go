@@ -120,3 +120,16 @@ func TestReadConfig(t *testing.T) {
 	}
 
 }
+
+func TestLogging(t *testing.T) {
+
+	str := SetLogging()
+	c := ReadConfig("../fixtures/config.json")
+	fw := &Firewall{Config: c}
+	fw.Read()
+	fw.Parse()
+	iprecs := fw.CreateIpRec()
+	fw.WriteRecs(iprecs)
+	fmt.Printf("->%s<-", str.String())
+
+}

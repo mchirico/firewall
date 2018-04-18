@@ -7,13 +7,14 @@ os:
 - linux
 install:
 - go get github.com/stretchr/testify/assert
+- go get -u golang.org/x/sys/...
+- go get github.com/fsnotify/fsnotify
+- go get github.com/hpcloud/tail/...
 
 
 script:
-- go test -race -v -coverprofile=c0.out -cpuprofile cpu.prof -memprofile mem.prof -covermode=atomic github.com/mchirico/firewall/utils
-
-# No tests at this moment
-# - go test -race -v -coverprofile=c1.out -covermode=atomic github.com/mchirico/gcpso/utils
+- go test -v -coverprofile=c0.out -cpuprofile cpu.prof -memprofile mem.prof -covermode=atomic github.com/mchirico/firewall/utils
+- go test -race -v -coverprofile=c1.out -covermode=atomic github.com/mchirico/firewall/watch
 
 
 before_install:
