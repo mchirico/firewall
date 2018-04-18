@@ -182,8 +182,8 @@ func (m *MC) Read() {
 }
 
 
-
-func (m *MC) logTest(event string) string {
+// LogTest -- hold no locks on this one
+func (m *MC) LogTest(event string) string {
 	m.Read()
 	log.Println("(MC)YES!!", event, m.Inc(),string(m.GetB()))
 	return event
