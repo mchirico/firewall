@@ -11,6 +11,7 @@ import (
 	"log"
 	"time"
 
+	"bytes"
 	"encoding/json"
 	"sort"
 )
@@ -245,5 +246,13 @@ func Cmd(cmd string) {
 		log.Printf("Command failed")
 		fmt.Printf("f")
 	}
+
+}
+
+func SetLogging() bytes.Buffer {
+
+	var str bytes.Buffer
+	log.SetOutput(&str)
+	return str
 
 }

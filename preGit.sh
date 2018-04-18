@@ -11,6 +11,7 @@ export GOMAXPROCS=8
 gofmt -s -w utils/utils.go
 gofmt -s -w utils/utils_test.go
 go test -race -v -coverprofile=c0.out -covermode=atomic github.com/mchirico/firewall/utils
+go test -race -v -coverprofile=c0.out -covermode=atomic github.com/mchirico/firewall/watch
 #go test -race -v -coverprofile=c1.out -covermode=atomic github.com/mchirico/gcpso/utils
 go vet -v github.com/mchirico/firewall/utils # github.com/mchirico/gcpso/utils
 

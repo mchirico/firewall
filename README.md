@@ -6,6 +6,9 @@
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/mchirico/firewall.svg?columns=all)](https://waffle.io/mchirico/firewall)
 
 
+[![Throughput Graph](https://graphs.waffle.io/mchirico/firewall/throughput.svg)](https://waffle.io/mchirico/firewall/metrics/throughput)
 
 # firewall
 Block IP Addresses from Log Entires
+
+
