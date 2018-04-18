@@ -2,8 +2,8 @@ package utils
 
 import (
 	"fmt"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func TestRead(t *testing.T) {
@@ -41,19 +41,18 @@ func TestSets(t *testing.T) {
 	s2.Add("d")
 
 	a := s.Union(s2).Keys()
-	b := []string{"a", "b", "c","d"}
-	if ! reflect.DeepEqual(a, b) {
+	b := []string{"a", "b", "c", "d"}
+	if !reflect.DeepEqual(a, b) {
 
 		t.Error("missing values")
 	}
 
 	a = s.Diff(s2).Keys()
-	b = []string{ "c","d"}
-	if ! reflect.DeepEqual(a, b) {
+	b = []string{"c", "d"}
+	if !reflect.DeepEqual(a, b) {
 
 		t.Error("missing values")
 	}
-
 
 }
 
@@ -115,7 +114,7 @@ func TestReadConfig(t *testing.T) {
 	if c.SearchLogs[1].Ports[0] != 25 {
 		t.Errorf(("Error in search log port"))
 	}
-	if c.SearchLogs[1].Regex != ".*Invalid user.* " +
+	if c.SearchLogs[1].Regex != ".*Invalid user.* "+
 		"([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)" {
 		t.Errorf(("Error in search log regex"))
 	}

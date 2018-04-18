@@ -66,7 +66,7 @@ func (s *Set) Diff(s2 *Set) *Set {
 
 func (s *Set) Keys() []string {
 	t := []string{}
-	for k, _ := range s.set {
+	for k := range s.set {
 		t = append(t, k)
 	}
 	sort.Strings(t)
