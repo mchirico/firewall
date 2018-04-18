@@ -12,9 +12,74 @@ import (
 	"time"
 
 	"encoding/json"
+	"sort"
 )
 
 var MaxFileSize = 500000000
+
+// Set
+type Set struct {
+	set map[string]bool
+}
+
+// CreateS
+func CreateS() *Set {
+	return &Set{map[string]bool{}}
+}
+
+// Insert
+func (set *Set) Add(s string) bool {
+	_, found := set.set[s]
+	set.set[s] = true
+	return found
+}
+
+// In
+func (set *Set) In(s string) bool {
+	_, found := set.set[s]
+	return found
+}
+
+func (s *Set) Union(s2 *Set) *Set {
+	t := CreateS()
+	for k, v := range s2.set {
+		t.set[k] = v
+	}
+	for k, v := range s.set {
+		t.set[k] = v
+	}
+	return t
+
+}
+
+func (s *Set) Diff(s2 *Set) *Set {
+	t := CreateS()
+
+	for k, v := range s2.set {
+		if !s.In(k) {
+			t.set[k] = v
+		}
+	}
+	return t
+
+}
+
+func (s *Set) Keys() []string {
+	t := []string{}
+	for k := range s.set {
+		t = append(t, k)
+	}
+	sort.Strings(t)
+	return t
+
+}
+
+// IpRec -- ip's to block
+type IpRec struct {
+	IP    string
+	Count int
+	Ports []int
+}
 
 // Ports -- used for search logs
 type Ports struct {
@@ -27,6 +92,7 @@ type Ports struct {
 type Config struct {
 	WhiteListIPS         []string
 	OutputLog            string
+	StatusLog            string
 	QueryIntervalSeconds string
 	SearchLogs           []Ports
 }
@@ -39,7 +105,7 @@ type Firewall struct {
 	BadIP   []map[string]int
 }
 
-// Reads info from config file
+// ReadConfig - Reads info from config file
 func ReadConfig(file string) Config {
 
 	f, _ := os.Open(file)
@@ -84,6 +150,12 @@ func (fw *Firewall) Read() {
 
 }
 
+// CreateFirewall
+func CreateFirewall(file string) *Firewall {
+	c := ReadConfig(file)
+	return &Firewall{Config: c}
+}
+
 // Parse
 func (fw *Firewall) Parse() {
 
@@ -109,6 +181,58 @@ func (fw *Firewall) Parse() {
 		fw.BadIP = append(fw.BadIP, ips)
 	}
 
+}
+
+// CreateIpRec --
+func (fw *Firewall) CreateIpRec() []IpRec {
+
+	iprecs := []IpRec{}
+
+	for idx, m := range fw.BadIP {
+
+		ports := fw.Config.SearchLogs[idx].Ports
+		for k, v := range m {
+			t := &IpRec{IP: k, Count: v, Ports: ports}
+			iprecs = append(iprecs, *t)
+		}
+	}
+	return iprecs
+}
+
+// WriteRecs
+func (fw *Firewall) WriteRecs(iprecs []IpRec) {
+
+	f, err := os.OpenFile(fw.Config.OutputLog, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Printf("WriteRecs openFile error %v", err)
+	}
+	defer f.Close()
+
+	iprecsJson, _ := json.Marshal(iprecs)
+	f.Write(iprecsJson)
+	return
+}
+
+// ReadRecs
+func (fw *Firewall) ReadRecs() []IpRec {
+
+	f, err := os.OpenFile(fw.Config.OutputLog, os.O_RDONLY, 0600)
+	if err != nil {
+		log.Printf("Can't open file %e", err)
+	}
+	b := make([]byte, MaxFileSize)
+	n, err := f.Read(b)
+	if err != nil {
+		log.Printf("ReadRecs: Can't read file %e", err)
+	}
+	iprecs := []IpRec{}
+
+	err = json.Unmarshal(b[0:n], &iprecs)
+	if err != nil {
+		log.Printf("ReadRecs: json.Unmarshal %e", err)
+	}
+
+	return iprecs
 }
 
 // Cmd to execute

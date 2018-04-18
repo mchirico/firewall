@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -26,6 +28,70 @@ func TestParse(t *testing.T) {
 	if fw.BadIP[0]["163.172.119.161"] != 2 {
 		t.Errorf(("Didn't read entries"))
 	}
+
+}
+
+func TestSets(t *testing.T) {
+	s := CreateS()
+	s.Add("a")
+	s.Add("b")
+
+	s2 := CreateS()
+	s2.Add("c")
+	s2.Add("d")
+
+	a := s.Union(s2).Keys()
+	b := []string{"a", "b", "c", "d"}
+	if !reflect.DeepEqual(a, b) {
+
+		t.Error("missing values")
+	}
+
+	a = s.Diff(s2).Keys()
+	b = []string{"c", "d"}
+	if !reflect.DeepEqual(a, b) {
+
+		t.Error("missing values")
+	}
+
+}
+
+func TestCreateIpRec(t *testing.T) {
+	c := ReadConfig("../fixtures/config.json")
+	fw := &Firewall{Config: c}
+	fw.Read()
+	fw.Parse()
+
+	iprec := fw.CreateIpRec()
+
+	if iprec[0].Ports[2] != 80 {
+		t.Fatalf("Didn't get port")
+	}
+
+	fmt.Printf("iprec[9]: %v\n", iprec[9])
+
+}
+
+func TestWriteRecs(t *testing.T) {
+
+	fw := CreateFirewall("../fixtures/config.json")
+	fw.Read()
+	fw.Parse()
+	iprecs := fw.CreateIpRec()
+	fw.WriteRecs(iprecs)
+
+}
+
+func TestReadRecs(t *testing.T) {
+	c := ReadConfig("../fixtures/config.json")
+	fw := &Firewall{Config: c}
+	fw.Read()
+	fw.Parse()
+	iprecs := fw.CreateIpRec()
+	fw.WriteRecs(iprecs)
+
+	recs := fw.ReadRecs()
+	fmt.Printf("here %v\n", recs[0].IP)
 
 }
 

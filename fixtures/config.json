@@ -1,6 +1,7 @@
 {
   "WhiteListIPS": ["102.29.34.4","102.29.34.4"],
-  "OutputLog": "../fixtures/firewall.log",
+  "OutputLog": "../fixtures/firewall.json",
+  "StatusLog": "../fixtures/firewallStatus.log",
   "QueryIntervalSeconds": "34",
   "SearchLogs":[
     {
