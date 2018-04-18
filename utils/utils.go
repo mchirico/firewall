@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"encoding/json"
+	"sort"
 )
 
 var MaxFileSize = 500000000
@@ -59,6 +60,16 @@ func (s *Set) Diff(s2 *Set) *Set {
 			t.set[k] = v
 		}
 	}
+	return t
+
+}
+
+func (s *Set) Keys() []string {
+	t := []string{}
+	for k, _ := range s.set {
+		t = append(t, k)
+	}
+	sort.Strings(t)
 	return t
 
 }
