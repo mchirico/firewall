@@ -13,7 +13,7 @@ import (
 // MaxFileSize to open
 var MaxFileSize = 20000000
 
-// FileExists --
+// FileExist --
 func FileExist(file string) bool {
 
 	if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -25,7 +25,8 @@ func FileExist(file string) bool {
 // CMD --
 type CMD struct {
 	done       chan struct{}
-	Cmd        func(string) string
+	CmdWrite        func(string)
+	CmdAllEvents    func(string)
 	TickCmd    func(string)
 	File       string
 	tickTime   time.Duration
@@ -34,8 +35,13 @@ type CMD struct {
 }
 
 // OpenWatcher --
-func OpenWatcher(cmd func(string) string, tickcmd func(string), file string) *CMD {
-	return &CMD{make(chan struct{}, 1), cmd,
+func OpenWatcher(cmdWrite func(string),
+	cmdAllEvents func(string),
+	tickcmd func(string), file string) *CMD {
+
+	return &CMD{make(chan struct{}, 1),
+	cmdWrite,
+	cmdAllEvents,
 		tickcmd, file, 600,
 		1000, sync.Mutex{}}
 }
@@ -45,7 +51,7 @@ func (cmd *CMD) Stop() {
 	cmd.done <- struct{}{}
 }
 
-// Watcher
+// Watcher --
 func (cmd *CMD) Watcher() {
 	tick := time.Tick(cmd.tickTime * time.Millisecond)
 	single := time.After(cmd.singleTime * time.Millisecond)
@@ -63,8 +69,9 @@ func (cmd *CMD) Watcher() {
 				log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
-					go cmd.Cmd(event.Name)
+					go cmd.CmdWrite(event.Name)
 				}
+
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
 
@@ -105,12 +112,12 @@ type MC struct {
 	b []byte
 }
 
-// NewMc --
+// NewMC --
 func NewMC(file string) *MC {
 	return &MC{file: file}
 }
 
-// Inc
+// Inc --
 func (m *MC) Inc() int {
 	m.Lock()
 	defer m.Unlock()
@@ -183,8 +190,20 @@ func (m *MC) Read() {
 
 
 // LogTest -- hold no locks on this one
-func (m *MC) LogTest(event string) string {
+func (m *MC) WriteEvent(event string)  {
 	m.Read()
 	log.Println("(MC)YES!!", event, m.Inc(),string(m.GetB()))
-	return event
+
+}
+
+func (m *MC) AllEvents(event string)  {
+
+	log.Println("All Events", event)
+
+}
+
+func (m *MC) Tick(event string)  {
+
+	log.Println("Tick", event)
+
 }
