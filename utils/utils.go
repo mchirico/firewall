@@ -249,6 +249,7 @@ func Cmd(cmd string) {
 
 }
 
+// SetLogging --
 func SetLogging() bytes.Buffer {
 
 	var str bytes.Buffer

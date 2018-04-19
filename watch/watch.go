@@ -32,6 +32,7 @@ type CMD struct {
 	tickTime     time.Duration
 	singleTime   time.Duration
 	sync.Mutex
+	restartCount int64
 }
 
 // OpenWatcher --
@@ -43,12 +44,18 @@ func OpenWatcher(cmdWrite func(string),
 		cmdWrite,
 		cmdAllEvents,
 		tickcmd, file, 600,
-		1000, sync.Mutex{}}
+		1000, sync.Mutex{}, 0}
 }
 
 // Stop --
 func (cmd *CMD) Stop() {
 	cmd.done <- struct{}{}
+}
+
+func (cmd *CMD) RestartCount() int64 {
+	cmd.Lock()
+	defer cmd.Unlock()
+	return cmd.restartCount
 }
 
 func BackOffFileCheck(file string) bool {
@@ -87,6 +94,7 @@ func (cmd *CMD) Watcher() {
 
 					if BackOffFileCheck(cmd.File) {
 						cmd.Lock()
+						cmd.restartCount += 1
 						watcher.Add(cmd.File)
 						cmd.Unlock()
 
@@ -97,6 +105,7 @@ func (cmd *CMD) Watcher() {
 
 					if BackOffFileCheck(cmd.File) {
 						cmd.Lock()
+						cmd.restartCount += 1
 						watcher.Add(cmd.File)
 						cmd.Unlock()
 
@@ -107,6 +116,9 @@ func (cmd *CMD) Watcher() {
 				}
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					go cmd.CmdAllEvents("CREATE")
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					go cmd.CmdAllEvents("WRITE")
 				}
 
 			case err := <-watcher.Errors:
@@ -145,13 +157,29 @@ type MC struct {
 	ret            int64
 	f              *os.File
 	tickLast       time.Time
+	writeLast      time.Time
 	b              []byte
 	removeOrRename bool
+	events         map[string]time.Time
+	allEvents      []EventMap
+}
+
+// EventMap --
+type EventMap struct {
+	event string
+	time  time.Time
+}
+
+// MCError --
+type MCError struct {
+	When time.Time
+	What string
 }
 
 // NewMC --
 func NewMC(file string) *MC {
-	return &MC{file: file}
+	return &MC{file: file, events: map[string]time.Time{},
+		allEvents: []EventMap{}}
 }
 
 // Inc --
@@ -211,6 +239,41 @@ func (m *MC) StatusRemoveRename() bool {
 	return m.removeOrRename
 }
 
+// AddEvent --
+func (m *MC) AddEvent(e string) {
+	m.Lock()
+	defer m.Unlock()
+	if len(m.allEvents) > 9000 {
+		m.allEvents = []EventMap{}
+		m.events = map[string]time.Time{}
+		m.events["EVENTS CLEARED"] = time.Now()
+	}
+	t := time.Now()
+	m.events[e] = t
+	lastEvent := EventMap{e, t}
+	m.allEvents = append(m.allEvents, lastEvent)
+}
+
+func (e MCError) Error() string {
+	return fmt.Sprintf("%v: %v", e.When, e.What)
+}
+
+func (m *MC) LastEvent() (EventMap, error) {
+	m.Lock()
+	defer m.Unlock()
+	length := len(m.allEvents)
+	if length > 0 {
+
+		return m.allEvents[length-1], nil
+
+	}
+	err := MCError{
+		When: time.Now(),
+		What: "No events",
+	}
+	return EventMap{}, err
+}
+
 // RemoveRename --
 func (m *MC) RemoveRename(event string) {
 	m.Lock()
@@ -257,9 +320,8 @@ func (m *MC) Read() {
 		m.removeOrRename = false
 	}
 
-	//m.ret, err =  m.f.Seek(0,io.SeekCurrent)
-	if err != nil {
-		fmt.Println("Err in m.f.Seek", err)
+	if n > 0 {
+		m.writeLast = time.Now()
 	}
 	m.n = n
 	m.b = b[0:n]
@@ -269,18 +331,22 @@ func (m *MC) Read() {
 
 // LogTest -- hold no locks on this one
 func (m *MC) WriteEvent(event string) {
+
 	m.Read()
-	log.Println("(MC)YES!!", event, m.Inc(), string(m.GetB()))
+	writes := m.Inc()
+	log.Println("(MC)YES!!", event, writes, string(m.GetB()))
 
 }
 
+// AllEvents --
 func (m *MC) AllEvents(event string) {
-
+	m.AddEvent(event)
 	m.RemoveRename(event)
 	log.Println("All Events", event)
 
 }
 
+// Tick --
 func (m *MC) Tick(event string) {
 	m.TickUpdate()
 	//log.Println("Tick", event, m.GetTick())

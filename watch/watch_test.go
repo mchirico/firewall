@@ -95,7 +95,7 @@ func TestBackground(t *testing.T) {
 
 }
 
-func TestCicle(t *testing.T) {
+func TestFileDeletedAndRestored(t *testing.T) {
 
 	os.Remove(file)
 	f, _ := os.OpenFile(file,
@@ -110,9 +110,15 @@ func TestCicle(t *testing.T) {
 	f.WriteString("test")
 	f.Close()
 
+	if m.Count() != 0 {
+		t.Errorf("Count should be  0 %v ", m.Count())
+	}
+
 	if m.StatusRemoveRename() == true {
 		t.Errorf("Status should be false")
 	}
+
+	t.Log("\n -- Now Removing File --\n")
 
 	os.Remove(file)
 	time.Sleep(2 * time.Second)
@@ -137,7 +143,61 @@ func TestCicle(t *testing.T) {
 		t.Errorf("Error b %v expected %v",
 			m.GetB(), expectedString)
 	}
+
+	if m.Count() == 0 {
+		t.Errorf("Count should be > 0 %v ", m.Count())
+	}
+
 	cmd.Stop()
 	f.Close()
+
+}
+
+func TestMC_LastEvent(t *testing.T) {
+	os.Remove(file)
+	f, _ := os.OpenFile(file,
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+
+	m := NewMC(file)
+	cmd := OpenWatcher(m.WriteEvent, m.AllEvents,
+		m.Tick, file)
+
+	cmd.Watcher()
+
+	lastEvent, err := m.LastEvent()
+	if err == nil {
+		t.Errorf("LastEvent should "+
+			"not have any entries: %v", lastEvent)
+	}
+
+	f.WriteString("test")
+	f.Sync()
+	time.Sleep(1 * time.Second)
+	lastEvent, err = m.LastEvent()
+	if err != nil {
+		t.Errorf("LastEvent should "+
+			"have any entries: %v", lastEvent)
+	}
+	if lastEvent.event != "WRITE" {
+		t.Errorf("Event: %v, expected: %v\n",
+			lastEvent.event, "WRITE")
+	}
+
+	expectedB := "test"
+	if string(m.GetB()) != expectedB {
+		t.Errorf("GetB(): ->%v<-  Expected value: "+
+			"->%v<-", string(m.GetB()), expectedB)
+	}
+
+	for i := 0; i < 12; i++ {
+		expectedB += "\n more Data\n"
+	}
+	f.WriteString(expectedB)
+	f.Sync()
+	time.Sleep(1 * time.Second)
+	if string(m.GetB()) != expectedB {
+		t.Errorf("GetB(): ->%v<-  Expected value: "+
+			"->%v<-", string(m.GetB()), expectedB)
+	}
 
 }
