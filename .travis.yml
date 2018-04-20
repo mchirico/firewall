@@ -1,8 +1,13 @@
 language: go
 sudo: required
 dist: trusty
+
 go:
 - '1.10'
+
+env:
+  - GOMAXPROCS=4
+
 os:
 - linux
 install:

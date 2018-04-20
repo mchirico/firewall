@@ -6,7 +6,7 @@
 # git tag -a v1.0 -m 'simple main test with flags'
 # git checkout tags/v1.0
 
-export GOMAXPROCS=8
+export GOMAXPROCS=4
 
 gofmt -s -w utils/utils.go
 gofmt -s -w utils/utils_test.go
