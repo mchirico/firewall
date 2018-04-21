@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/mchirico/firewall/utils"
 	"log"
 	"os"
@@ -31,5 +32,7 @@ func b() {
 }
 
 func main() {
+
+	fmt.Println(os.Getenv("GOPATH"))
 
 }
