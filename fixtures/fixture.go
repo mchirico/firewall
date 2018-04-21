@@ -79,6 +79,7 @@ func CreateConfig() (string, string) {
 	return configContents, dst
 }
 
+// CreateActiveStageDirs --
 func CreateActiveStageDirs() {
 
 	parent := GetBaseDir()
