@@ -1,7 +1,12 @@
 package fixtures
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/mchirico/firewall/utils"
+	"github.com/mchirico/firewall/watch"
+	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 )
@@ -36,7 +41,76 @@ func TestGetBaseDir(t *testing.T) {
 func TestFileExist(t *testing.T) {
 
 	_, file := CreateConfig()
-	if !FileExist(file) {
+	if !watch.FileExist(file) {
 		t.Errorf(" File was not created")
 	}
+}
+
+func TestRemoveActiveStageDirs(t *testing.T) {
+
+	parent := GetBaseDir()
+	dirs := make([]DirStruct, len(Dirs))
+
+	for i, d := range Dirs {
+		dirs[i].file = parent + d.file
+
+	}
+
+	for _, dir := range dirs {
+		if !watch.FileExist(dir.file) {
+			t.Errorf(" File was not created")
+		}
+	}
+
+	RemoveActiveStageDirs()
+
+	for _, dir := range dirs {
+		if watch.FileExist(dir.file) {
+			t.Errorf(" Directory should have been " +
+				"deleted")
+		}
+		log.Println(dir)
+	}
+
+}
+
+func TestCreateConfig(t *testing.T) {
+
+	expectedValue := "junkTest"
+
+	RemoveActiveStageDirs()
+	_, dst := CreateConfig()
+
+	c := utils.ReadConfig(dst)
+	fmt.Printf("c: %v\n", c)
+	c.OutputLog = expectedValue
+
+	cJson, _ := json.Marshal(c)
+	err := ioutil.WriteFile(dst, cJson, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+
+	c = utils.ReadConfig(dst)
+
+	if c.OutputLog != expectedValue {
+		t.Errorf("Ouput not saved %v, %v\n"+
+			"  ", c.OutputLog, expectedValue)
+	}
+
+}
+
+func TestUpdateConfigLogs(t *testing.T) {
+	_, dst := CreateConfig()
+	c := utils.ReadConfig(dst)
+	UpdateConfigLogs(c, dst)
+
+}
+
+func TestUpdateConfigSettings(t *testing.T) {
+	c := UpdateConfigSettings()
+	if watch.FileExist(c.StatusLog) {
+		t.Errorf("File should exist:%s", c.StatusLog)
+	}
+
 }
