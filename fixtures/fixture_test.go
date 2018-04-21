@@ -33,8 +33,6 @@ func TestGetBaseDir(t *testing.T) {
 
 }
 
-
-
 func TestFileExist(t *testing.T) {
 
 	_, file := CreateConfig()
