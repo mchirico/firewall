@@ -97,6 +97,41 @@ func UpdateConfigLogs(c utils.Config, file string) {
 
 }
 
+// CopyStageFiles -- Come back for Access logs
+func CopyStageFiles() {
+	c := UpdateConfigSettings()
+
+	CopyFile("./stage/auth.log.stage",
+		c.SearchLogs[0].Log)
+	CopyFile("./stage/mail.log.stage",
+		c.SearchLogs[1].Log)
+
+}
+
+func CopyFile(src string, dst string) {
+
+	s, err := os.OpenFile(src, os.O_CREATE|os.O_RDONLY, 0600)
+	if err != nil {
+		return
+	}
+	defer s.Close()
+
+	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return
+	}
+	defer d.Close()
+
+	b := make([]byte, 50000000)
+	n, err := s.Read(b)
+	if err != nil {
+		log.Println("can't read source config")
+	}
+
+	d.Write(b[0:n])
+	d.Sync()
+}
+
 // CreateConfig --
 func CreateConfig() (string, string) {
 

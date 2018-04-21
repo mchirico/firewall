@@ -113,4 +113,13 @@ func TestUpdateConfigSettings(t *testing.T) {
 		t.Errorf("File should exist:%s", c.StatusLog)
 	}
 
+	log.Println(c.SearchLogs[0].Log)
+}
+
+func TestCopyStageFiles(t *testing.T) {
+	CopyStageFiles()
+	c := UpdateConfigSettings()
+	watch.FileExist(c.SearchLogs[0].Log)
+	watch.FileExist(c.SearchLogs[1].Log)
+
 }
