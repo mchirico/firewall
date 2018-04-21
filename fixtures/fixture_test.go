@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -122,4 +123,13 @@ func TestCopyStageFiles(t *testing.T) {
 	watch.FileExist(c.SearchLogs[0].Log)
 	watch.FileExist(c.SearchLogs[1].Log)
 
+	f, _ := os.OpenFile(c.SearchLogs[0].Log, os.O_RDONLY, 0600)
+	b := make([]byte, 500)
+	f.Read(b)
+	fmt.Println(string(b))
+	s := string(b)
+	count := strings.Count(s, "Invalid user supervisor from 87.138.66.123")
+	if count != 1 {
+		t.Errorf("Could not read log")
+	}
 }
