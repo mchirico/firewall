@@ -12,8 +12,9 @@
 [![Throughput Graph](https://graphs.waffle.io/mchirico/firewall/throughput.svg)](https://waffle.io/mchirico/firewall/metrics/throughput)
 
 <img alt="CWXSTAT" src="https://storage.googleapis.com/montco-stats/cwxstat2.svg" width="100px">
-
-
+<a href="https://confluence.aipiggybot.io">
+<img alt="Confluence" src="https://storage.googleapis.com/montco-stats/confluence.png"  width="100px">
+</a>
 
 ### Under Development
 Block IP Addresses from Log Entires
