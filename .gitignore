@@ -25,3 +25,9 @@
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
+
+#
+./fixtures/stage/
+*.stage
+*.stage.config.json
+
