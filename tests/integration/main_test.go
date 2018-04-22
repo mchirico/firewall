@@ -4,10 +4,10 @@ import (
 	"fmt"
 	. "github.com/mchirico/firewall/fixtures"
 	"github.com/mchirico/firewall/watch"
+	"log"
 	"os"
 	"strings"
 	"testing"
-	"log"
 )
 
 func TestMain(m *testing.M) {
@@ -22,7 +22,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 
 }
-
 
 func TestCopyStageFilesBeginEnd(t *testing.T) {
 
