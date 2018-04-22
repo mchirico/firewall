@@ -78,10 +78,10 @@ func UpdateConfigSettings() utils.Config {
 func UpdateConfigLogs(c utils.Config, file string) {
 
 	c.SearchLogs[0].Log =
-		GetBaseDir() + getFile("var") + "/auth.log"
+		GetBaseDir() + getFile("log") + "/auth.log"
 
 	c.SearchLogs[1].Log =
-		GetBaseDir() + getFile("var") + "/mail.log"
+		GetBaseDir() + getFile("log") + "/mail.log"
 
 	c.OutputLog = GetBaseDir() + getFile("var") +
 		"/firewall.json"
@@ -108,13 +108,23 @@ func CopyStageFiles() {
 
 }
 
+// LogRead -- for testing
+func LogRead(c utils.Config, bytesMax int64, logNum int) string {
+	f, _ := os.OpenFile(c.SearchLogs[logNum].Log, os.O_RDONLY, 0600)
+	defer f.Close()
+
+	b := make([]byte, bytesMax)
+	n, _ := f.Read(b)
+	return string(b[0:n])
+
+}
+
 func CopyStageFilesBeginEnd(begin int,
 	end int) {
 	c := UpdateConfigSettings()
-
-	CopyFileBeginEnd("./stage/auth.log.stage",
+	CopyFileBeginEnd(GetBaseDir()+"/fixtures/stage/auth.log.stage",
 		c.SearchLogs[0].Log, begin, end)
-	CopyFileBeginEnd("./stage/mail.log.stage",
+	CopyFileBeginEnd(GetBaseDir()+"/fixtures/stage/mail.log.stage",
 		c.SearchLogs[1].Log, begin, end)
 
 }
@@ -126,15 +136,69 @@ func CopyFileBeginEnd(src string,
 
 	s, err := os.OpenFile(src, os.O_CREATE|os.O_RDONLY, 0600)
 	if err != nil {
+		log.Printf("Could not open source: %v",
+			src)
 		return
 	}
 	defer s.Close()
 
+	d, err := os.OpenFile(dst, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return
+	}
+	defer d.Close()
+
+	log.Printf("Dest write: %v\n\n", dst)
+
+	b := make([]byte, 50000000)
+	n, err := s.Read(b)
+	if err != nil {
+		log.Println("can't read source config")
+	}
+
+	sep := "\n"
+	lines := strings.Split(string(b[0:n]), sep)
+	length := len(lines)
+
+	for i := begin; i < end && end < length; i++ {
+		bLine := []byte(lines[i] + sep)
+		d.Write(bLine)
+		d.Sync()
+	}
+
+}
+
+func CreateStageFilesBeginEnd(begin int,
+	end int) {
+	c := UpdateConfigSettings()
+	CreateFileBeginEnd(GetBaseDir()+"/fixtures/stage/auth.log.stage",
+		c.SearchLogs[0].Log, begin, end)
+	CreateFileBeginEnd(GetBaseDir()+"/fixtures/stage/mail.log.stage",
+		c.SearchLogs[1].Log, begin, end)
+
+}
+
+// CreateFileBeginEnd -- this will recreate..
+func CreateFileBeginEnd(src string,
+	dst string,
+	begin int, end int) {
+
+	s, err := os.OpenFile(src, os.O_CREATE|os.O_RDONLY, 0600)
+	if err != nil {
+		log.Printf("Could not open source: %v",
+			src)
+		return
+	}
+	defer s.Close()
+
+	os.Remove(dst)
 	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return
 	}
 	defer d.Close()
+
+	log.Printf("Dest write: %v\n\n", dst)
 
 	b := make([]byte, 50000000)
 	n, err := s.Read(b)
@@ -210,6 +274,17 @@ func CreateConfig() (string, string) {
 	return configContents, dst
 }
 
+// DeleteConfig --
+func DeleteConfig() {
+	CreateActiveStageDirs()
+	dst := GetBaseDir() + "/fixtures/var/etc/config.cfg"
+	_, err := os.Stat(dst)
+
+	if err != nil {
+		os.Remove(dst)
+	}
+}
+
 // CreateActiveStageDirs --
 func CreateActiveStageDirs() {
 
@@ -224,7 +299,7 @@ func CreateActiveStageDirs() {
 	for _, dir := range dirs {
 		err := os.Mkdir(dir.file, os.ModePerm)
 		if err != nil {
-			//log.Println(err.Error())
+			// log.Println(err.Error())
 		}
 	}
 

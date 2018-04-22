@@ -179,11 +179,8 @@ func TestCopyStageFilesBeginEnd(t *testing.T) {
 
 	// Begin test
 
-	f, _ := os.OpenFile(c.SearchLogs[0].Log, os.O_RDONLY, 0600)
-	b := make([]byte, 500)
-	n, _ := f.Read(b)
-	fmt.Println(string(b[0:n]))
-	s := string(b[0:n])
+	s := LogRead(c, 500, 0)
+
 	count := strings.Count(s, "Invalid user supervisor from 87.138.66.123")
 	if count != 1 {
 		t.Errorf("Could not read log")
@@ -194,4 +191,29 @@ func TestCopyStageFilesBeginEnd(t *testing.T) {
 	if count >= 1 {
 		t.Errorf("Read too many lines")
 	}
+
+	CopyStageFilesBeginEnd(0, 16)
+	s = LogRead(c, 500, 0)
+
+	count = strings.Count(s, "error: maximum authentication "+
+		"attempts exceeded ")
+	if count == 0 {
+		t.Errorf("Read too few lines: %v", count)
+	}
+
+}
+
+func TestCreateStageFilesBeginEnd(t *testing.T) {
+
+	CreateStageFilesBeginEnd(0, 2)
+	c := UpdateConfigSettings()
+	if !watch.FileExist(c.SearchLogs[0].Log) {
+		t.Errorf("file not created")
+	}
+	if !watch.FileExist(c.SearchLogs[1].Log) {
+		t.Errorf("file not created")
+	}
+	s := LogRead(c, 50000, 0)
+	log.Printf(".\n\n.. %s", s)
+
 }
