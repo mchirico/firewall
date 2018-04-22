@@ -2,8 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"reflect"
+	. "github.com/mchirico/firewall/include"
+	"github.com/mchirico/firewall/set"
+	"os"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestRead(t *testing.T) {
@@ -31,31 +36,6 @@ func TestParse(t *testing.T) {
 
 }
 
-func TestSets(t *testing.T) {
-	s := CreateS()
-	s.Add("a")
-	s.Add("b")
-
-	s2 := CreateS()
-	s2.Add("c")
-	s2.Add("d")
-
-	a := s.Union(s2).Keys()
-	b := []string{"a", "b", "c", "d"}
-	if !reflect.DeepEqual(a, b) {
-
-		t.Error("missing values")
-	}
-
-	a = s.Diff(s2).Keys()
-	b = []string{"c", "d"}
-	if !reflect.DeepEqual(a, b) {
-
-		t.Error("missing values")
-	}
-
-}
-
 func TestCreateIpRec(t *testing.T) {
 	c := ReadConfig("../fixtures/config.json")
 	fw := &Firewall{Config: c}
@@ -78,6 +58,7 @@ func TestWriteRecs(t *testing.T) {
 	fw.Read()
 	fw.Parse()
 	iprecs := fw.CreateIpRec()
+	//log.Println(iprecs)
 	fw.WriteRecs(iprecs)
 
 }
@@ -130,6 +111,106 @@ func TestLogging(t *testing.T) {
 	fw.Parse()
 	iprecs := fw.CreateIpRec()
 	fw.WriteRecs(iprecs)
+
 	fmt.Printf("->%s<-", str.String())
+
+}
+
+// Example of Command Structure (or maybe broker)
+type CmdS struct {
+	sync.Mutex
+	cmd     string
+	status  map[int]bool
+	createS *set.Set
+}
+
+func CreateCmdS() *CmdS {
+	c := &CmdS{}
+	c.createS = set.CreateS()
+	c.status = map[int]bool{}
+
+	return c
+}
+
+func (cmdS *CmdS) Build(i int, iprec IpRec) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+	tmpSet := set.CreateS()
+	tmpSet.Add(set.CreateIpRec(iprec.IP, iprec.Ports))
+	tmpSet = tmpSet.Difference(cmdS.createS)
+
+	s := ""
+	for k, v := range tmpSet.Values() {
+		s += fmt.Sprintf("echo  %v:  %v >>/tmp/firewall.cmd\n",
+			k, v)
+	}
+	cmdS.createS.Union(tmpSet)
+
+	cmdS.cmd = s
+	cmdS.status[i] = false
+}
+
+func (cmdS *CmdS) Exe(i int) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+	Cmd(cmdS.cmd)
+	cmdS.status[i] = true
+}
+
+func checkForRepeats(file string) bool {
+	f, err := os.OpenFile(file, os.O_RDONLY, 0600)
+	if err != nil {
+		return true
+	}
+	b := make([]byte, 19000)
+	n, err := f.Read(b)
+	s := string(b[0:n])
+	strings.Split(s, "\n")
+	m := map[string]int{}
+	for _, v := range strings.Split(s, "\n") {
+		ip := strings.Split(v, ":")[0]
+		v, found := m[ip]
+		if found {
+			m[ip] = v + 1
+			return true
+		}
+		m[ip] = 0
+	}
+	return false
+
+}
+
+func TestStagedRun(t *testing.T) {
+
+	os.Remove("/tmp/firewall.cmd")
+	str := SetLogging()
+	c := ReadConfig("../fixtures/config.json")
+	fw := &Firewall{Config: c}
+
+	cmd := CreateCmdS()
+	fw.SetCmdSlave(cmd)
+
+	fw.Read()
+	fw.Parse()
+	iprecs := fw.CreateIpRec()
+	fw.WriteRecs(iprecs)
+	fmt.Printf("->%s<-", str.String())
+	fmt.Printf("->%v<-", iprecs[0:3])
+
+	fw.FireCommand()
+	time.Sleep(1 * time.Second)
+
+	f, err := os.OpenFile("/tmp/firewall.cmd", os.O_RDONLY, 0600)
+	if err != nil {
+		t.Errorf("/tmp/firewall.cmd not readable\n")
+	}
+	b := make([]byte, 9000)
+	n, err := f.Read(b)
+	fmt.Printf("\nb=%v\n", string(b[0:n]))
+
+	if checkForRepeats("/tmp/firewall.cmd") {
+		t.Errorf("repeats found in /tmp/firewall.cmd")
+	}
 
 }

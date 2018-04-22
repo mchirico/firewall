@@ -17,7 +17,10 @@ script:
   github.com/mchirico/firewall/utils
 - go test -race -v -coverprofile=c1.out -covermode=atomic github.com/mchirico/firewall/watch
 - go test -race -v  -coverprofile=c2.out -covermode=atomic github.com/mchirico/firewall/fixtures
-- go test -race -v  -coverprofile=c3.out -covermode=atomic github.com/mchirico/firewall/tests/integration/
+- go test -race -v  -coverprofile=c3.out -covermode=atomic github.com/mchirico/firewall/tests/integration/simple
+- go test -race -v  -coverprofile=c4.out -covermode=atomic github.com/mchirico/firewall/set
+- go test -race -v  -coverprofile=c5.out -covermode=atomic github.com/mchirico/firewall/subscriber
+- go test -race -v  -coverprofile=c6.out -covermode=atomic github.com/mchirico/firewall/include
 before_install:
 - openssl aes-256-cbc -K $encrypted_7bee5ceae7dc_key -iv $encrypted_7bee5ceae7dc_iv
   -in fixtures/stage.tar.enc -out fixtures/stage.tar -d
@@ -28,7 +31,7 @@ before_install:
 - chmod +x ./cc-test-reporter
 - "./cc-test-reporter before-build"
 after_success:
-- cat c0.out c1.out c2.out c3.out > c.out
+- cat c0.out c1.out c2.out c3.out c4.out c5.out c6.out > c.out
 - cp c.out coverage.txt
 - bash <(curl -s https://codecov.io/bash)
 - "./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT"
