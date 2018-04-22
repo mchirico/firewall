@@ -13,7 +13,7 @@ import (
 // MaxFileSize to open
 var MaxFileSize = 20000000
 
-// FileExist --
+// FileExist -- general file checker
 func FileExist(file string) bool {
 
 	if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -22,7 +22,7 @@ func FileExist(file string) bool {
 	return true
 }
 
-// CMD --
+// CMD -- format for config
 type CMD struct {
 	done         chan struct{}
 	CmdWrite     func(string)
@@ -58,6 +58,7 @@ func (cmd *CMD) RestartCount() int64 {
 	return cmd.restartCount
 }
 
+// BackOffFileCheck --
 func BackOffFileCheck(file string) bool {
 	for i := time.Duration(1); i < 30; i += 3 {
 		if !FileExist(file) {
