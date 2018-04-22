@@ -29,4 +29,5 @@
 #
 ./fixtures/stage/
 *.stage
+*.stage.config.json
 
