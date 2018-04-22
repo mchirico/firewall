@@ -108,6 +108,52 @@ func CopyStageFiles() {
 
 }
 
+func CopyStageFilesBeginEnd(begin int,
+	end int) {
+	c := UpdateConfigSettings()
+
+	CopyFileBeginEnd("./stage/auth.log.stage",
+		c.SearchLogs[0].Log, begin, end)
+	CopyFileBeginEnd("./stage/mail.log.stage",
+		c.SearchLogs[1].Log, begin, end)
+
+}
+
+// CopyFileBeginEnd
+func CopyFileBeginEnd(src string,
+	dst string,
+	begin int, end int) {
+
+	s, err := os.OpenFile(src, os.O_CREATE|os.O_RDONLY, 0600)
+	if err != nil {
+		return
+	}
+	defer s.Close()
+
+	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return
+	}
+	defer d.Close()
+
+	b := make([]byte, 50000000)
+	n, err := s.Read(b)
+	if err != nil {
+		log.Println("can't read source config")
+	}
+
+	sep := "\n"
+	lines := strings.Split(string(b[0:n]), sep)
+	length := len(lines)
+
+	for i := begin; i < end && end < length; i++ {
+		bLine := []byte(lines[i] + sep)
+		d.Write(bLine)
+		d.Sync()
+	}
+
+}
+
 func CopyFile(src string, dst string) {
 
 	s, err := os.OpenFile(src, os.O_CREATE|os.O_RDONLY, 0600)
@@ -178,7 +224,7 @@ func CreateActiveStageDirs() {
 	for _, dir := range dirs {
 		err := os.Mkdir(dir.file, os.ModePerm)
 		if err != nil {
-			log.Println(err.Error())
+			//log.Println(err.Error())
 		}
 	}
 
