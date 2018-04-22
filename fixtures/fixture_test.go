@@ -153,7 +153,7 @@ func TestCopyFileBeginEnd(t *testing.T) {
 	b := make([]byte, 300)
 	n, err := f.Read(b)
 	if n == 0 || err != nil {
-		t.Error("File could not be read: %v",
+		t.Errorf("File could not be read: %v",
 			file+".out")
 	}
 	if string(b[0:n]) != "line 3\n" {
