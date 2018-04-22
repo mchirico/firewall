@@ -174,7 +174,7 @@ func (fw *Firewall) Parse() {
 			list := re.FindStringSubmatch(line)
 
 			if len(list) == 2 {
-				ips[list[1]] += 1
+				ips[list[1]]++
 			}
 
 		}
