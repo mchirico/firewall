@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -128,7 +129,7 @@ func TestCopyStageFiles(t *testing.T) {
 	f, _ := os.OpenFile(c.SearchLogs[0].Log, os.O_RDONLY, 0600)
 	b := make([]byte, 500)
 	f.Read(b)
-	fmt.Println(string(b))
+	//fmt.Println(string(b))
 	s := string(b)
 	count := strings.Count(s, "Invalid user supervisor from 87.138.66.123")
 	if count != 1 {
@@ -179,11 +180,8 @@ func TestCopyStageFilesBeginEnd(t *testing.T) {
 
 	// Begin test
 
-	f, _ := os.OpenFile(c.SearchLogs[0].Log, os.O_RDONLY, 0600)
-	b := make([]byte, 500)
-	n, _ := f.Read(b)
-	fmt.Println(string(b[0:n]))
-	s := string(b[0:n])
+	s := LogRead(c, 500, 0)
+
 	count := strings.Count(s, "Invalid user supervisor from 87.138.66.123")
 	if count != 1 {
 		t.Errorf("Could not read log")
@@ -194,4 +192,135 @@ func TestCopyStageFilesBeginEnd(t *testing.T) {
 	if count >= 1 {
 		t.Errorf("Read too many lines")
 	}
+
+	CopyStageFilesBeginEnd(0, 16)
+	s = LogRead(c, 500, 0)
+
+	count = strings.Count(s, "error: maximum authentication "+
+		"attempts exceeded ")
+	if count == 0 {
+		t.Errorf("Read too few lines: %v", count)
+	}
+
+}
+
+func TestCreateStageFilesBeginEnd(t *testing.T) {
+
+	CreateStageFilesBeginEnd(0, 2)
+	c := UpdateConfigSettings()
+	if !watch.FileExist(c.SearchLogs[0].Log) {
+		t.Errorf("file not created")
+	}
+	if !watch.FileExist(c.SearchLogs[1].Log) {
+		t.Errorf("file not created")
+	}
+	s := LogRead(c, 50000, 0)
+	log.Printf(".\n\n.. %s", s)
+
+}
+
+func TestReadConfigFirewall(t *testing.T) {
+
+	c := UpdateConfigSettings()
+	if watch.FileExist(c.StatusLog) {
+		t.Errorf("File should exist:%s", c.StatusLog)
+	}
+	CreateStageFilesBeginEnd(0, 20)
+
+	fw := &utils.Firewall{Config: c}
+	fw.Read()
+	fw.Parse()
+
+	iprecs := fw.CreateIpRec()
+
+	if iprecs[0].Ports[2] != 80 {
+		t.Fatalf("Didn't get port: %v", iprecs[0])
+	}
+
+}
+
+func TestFirewallLogging(t *testing.T) {
+
+	c := UpdateConfigSettings()
+	if watch.FileExist(c.StatusLog) {
+		t.Errorf("File should exist:%s", c.StatusLog)
+	}
+	CreateStageFilesBeginEnd(0, 200)
+
+	fw := &utils.Firewall{Config: c}
+	fw.Read()
+	fw.Parse()
+
+	// Writing to log: GetOutLog()
+	iprecs := fw.CreateIpRec()
+	fw.WriteRecs(iprecs)
+
+	log.Printf("Does file exist?")
+	if !watch.FileExist(fw.GetOutLog()) {
+		t.Errorf("File does not exist: %v\n\n", fw.GetOutLog())
+	} else {
+		log.Printf("Yes...file exists..\n")
+	}
+
+	// Travis has memory limitation
+	utils.MaxFileSize = 50000
+	iprecsFromJsonLog := fw.ReadRecs()
+	log.Printf("got results from fw.ReadRecs()\n ")
+
+	testResult := false
+
+	for n, rec := range iprecsFromJsonLog {
+		if n%3 == 0 {
+			log.Printf("count: %v\n", n)
+		}
+
+		if rec.IP == "171.244.10.79" {
+			testResult = true
+			if rec.Count != 1 {
+				t.Errorf("Count incorrect: %v\n", rec.Count)
+			}
+		}
+	}
+	if !testResult {
+		t.Fatalf(" Could not find ip")
+	}
+
+	rec := iprecsFromJsonLog[0]
+	log.Printf("r %v %v\n", rec.IP, rec.Count)
+}
+
+func TestCmdWatherWithFirewall(t *testing.T) {
+
+	c := UpdateConfigSettings()
+	if watch.FileExist(c.StatusLog) {
+		t.Errorf("File should exist:%s", c.StatusLog)
+	}
+	CreateStageFilesBeginEnd(0, 200)
+
+	fw := &utils.Firewall{Config: c}
+
+	file := fw.Config.SearchLogs[0].Log
+
+	m := watch.NewMC(file, fw)
+	cmd := watch.OpenWatcher(m.WriteEvent, m.AllEvents,
+		m.Tick, file)
+
+	cmd.Watcher()
+
+	CreateStageFilesBeginEnd(0, 2)
+
+	iprecs := fw.CreateIpRec()
+	if iprecs[0].IP != "87.138.66.123" {
+		t.Fatalf("Can't capture bad IP: "+
+			"looking for 87.138.66.123, got: %v\n", iprecs[0].IP)
+	}
+	log.Printf("badIPs (iprecs): %v\n", iprecs)
+
+	time.Sleep(2 * time.Second)
+
+	CopyStageFilesBeginEnd(2, 12)
+	time.Sleep(2 * time.Second)
+	CopyStageFilesBeginEnd(12, 122)
+	time.Sleep(2 * time.Second)
+
 }
