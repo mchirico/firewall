@@ -207,7 +207,12 @@ func TestStagedRun(t *testing.T) {
 	}
 	b := make([]byte, 9000)
 	n, err := f.Read(b)
-	fmt.Printf("\nb=%v\n", string(b[0:n]))
+
+	if n > 100 {
+		fmt.Printf("\nb=%v\n", string(b[0:100]))
+	} else {
+		fmt.Printf("\nb=%v\n", string(b[0:n]))
+	}
 
 	if checkForRepeats("/tmp/firewall.cmd") {
 		t.Errorf("repeats found in /tmp/firewall.cmd")

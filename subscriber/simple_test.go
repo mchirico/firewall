@@ -49,7 +49,7 @@ func checkForRepeats(file string) bool {
 
 }
 
-func TestStagedRun(t *testing.T) {
+func TestSubscriber_StagedRun(t *testing.T) {
 
 	os.Remove("/tmp/firewall.cmd")
 	str := utils.SetLogging()
@@ -57,7 +57,9 @@ func TestStagedRun(t *testing.T) {
 
 	fw := &utils.Firewall{Config: c}
 
-	cmd := CreateCmdS()
+	// Example of push in command
+	stageCmd := "echo  %v:  %v >>/tmp/firewall.cmd\n"
+	cmd := CreateCmdS(stageCmd)
 	fw.SetCmdSlave(cmd)
 
 	fw.Read()
@@ -76,7 +78,12 @@ func TestStagedRun(t *testing.T) {
 	}
 	b := make([]byte, 9000)
 	n, err := f.Read(b)
-	fmt.Printf("\nb=%v\n", string(b[0:n]))
+
+	if n > 100 {
+		fmt.Printf("\nb=%v\n", string(b[0:100]))
+	} else {
+		fmt.Printf("\nb=%v\n", string(b[0:n]))
+	}
 
 	if checkForRepeats("/tmp/firewall.cmd") {
 		t.Errorf("repeats found in /tmp/firewall.cmd")

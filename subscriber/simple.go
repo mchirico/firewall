@@ -26,15 +26,17 @@ func Cmd(cmd string) {
 // Example of Command Structure (or maybe broker)
 type CmdS struct {
 	sync.Mutex
-	cmd     string
-	status  map[int]bool
-	createS *set.Set
+	cmd      string
+	status   map[int]bool
+	createS  *set.Set
+	stageCmd string
 }
 
-func CreateCmdS() *CmdS {
+func CreateCmdS(stageCmd string) *CmdS {
 	c := &CmdS{}
 	c.createS = set.CreateS()
 	c.status = map[int]bool{}
+	c.stageCmd = stageCmd
 
 	return c
 }
@@ -49,13 +51,14 @@ func (cmdS *CmdS) Build(i int, iprec IpRec) {
 
 	s := ""
 	for k, v := range tmpSet.Values() {
-		s += fmt.Sprintf("echo  %v:  %v >>/tmp/firewall.cmd\n",
+		s += fmt.Sprintf(cmdS.stageCmd,
 			k, v)
 	}
-	cmdS.createS.Union(tmpSet)
+	cmdS.createS = cmdS.createS.Union(tmpSet)
 
 	cmdS.cmd = s
 	cmdS.status[i] = false
+
 }
 
 func (cmdS *CmdS) Exe(i int) {

@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var LogMsg = false
+
 var UnEncryptedFiles = "../fixtures/stage/access.log.stage"
 var UseTemp = false
 
@@ -92,7 +94,9 @@ func UpdateConfigLogs(c utils.Config, file string) {
 	cJson, _ := json.Marshal(c)
 	err := ioutil.WriteFile(file, cJson, 0644)
 	if err != nil {
-		log.Println(err)
+		if LogMsg {
+			log.Println(err)
+		}
 	}
 
 }
@@ -272,7 +276,7 @@ func CreateConfig() (string, string) {
 		f.Sync()
 		configContents = string(b[0:n])
 	} else {
-		log.Println("Config exists.... will not overwrite")
+		//log.Println("Config exists.... will not overwrite")
 	}
 	return configContents, dst
 }

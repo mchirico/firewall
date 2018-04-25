@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -290,37 +289,5 @@ func TestFirewallLogging(t *testing.T) {
 }
 
 func TestCmdWatherWithFirewall(t *testing.T) {
-
-	c := UpdateConfigSettings()
-	if watch.FileExist(c.StatusLog) {
-		t.Errorf("File should exist:%s", c.StatusLog)
-	}
-	CreateStageFilesBeginEnd(0, 200)
-
-	fw := &utils.Firewall{Config: c}
-
-	file := fw.Config.SearchLogs[0].Log
-
-	m := watch.NewMC(file, fw)
-	cmd := watch.OpenWatcher(m.WriteEvent, m.AllEvents,
-		m.Tick, file)
-
-	cmd.Watcher()
-
-	CreateStageFilesBeginEnd(0, 2)
-
-	iprecs := fw.CreateIpRec()
-	if iprecs[0].IP != "87.138.66.123" {
-		t.Fatalf("Can't capture bad IP: "+
-			"looking for 87.138.66.123, got: %v\n", iprecs[0].IP)
-	}
-	log.Printf("badIPs (iprecs): %v\n", iprecs)
-
-	time.Sleep(2 * time.Second)
-
-	CopyStageFilesBeginEnd(2, 12)
-	time.Sleep(2 * time.Second)
-	CopyStageFilesBeginEnd(12, 122)
-	time.Sleep(2 * time.Second)
 
 }

@@ -52,6 +52,7 @@ func (cmd *CMD) Stop() {
 	cmd.done <- struct{}{}
 }
 
+// RestartCount --
 func (cmd *CMD) RestartCount() int64 {
 	cmd.Lock()
 	defer cmd.Unlock()
@@ -95,7 +96,7 @@ func (cmd *CMD) Watcher() {
 
 					if BackOffFileCheck(cmd.File) {
 						cmd.Lock()
-						cmd.restartCount += 1
+						cmd.restartCount++
 						watcher.Add(cmd.File)
 						cmd.Unlock()
 
@@ -106,7 +107,7 @@ func (cmd *CMD) Watcher() {
 
 					if BackOffFileCheck(cmd.File) {
 						cmd.Lock()
-						cmd.restartCount += 1
+						cmd.restartCount++
 						watcher.Add(cmd.File)
 						cmd.Unlock()
 
@@ -350,7 +351,7 @@ func (m *MC) WriteEvent(event string) {
 	m.Read()
 	m.Inc()
 	m.FireSlaveWriteEvent(event)
-	//log.Println("(MC)YES!!", event, writes, string(m.GetB()))
+	//log.Println("(MC)YES!!", event, string(m.GetB()))
 
 }
 

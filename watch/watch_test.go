@@ -2,9 +2,12 @@ package watch
 
 import (
 	"fmt"
+	"github.com/mchirico/firewall/subscriber"
 	"github.com/mchirico/firewall/utils"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -115,14 +118,49 @@ func TestGeneralSlave(t *testing.T) {
 
 }
 
+func mapOfOuput(file string) map[string]int {
+
+	m := map[string]int{}
+	f, err := os.OpenFile(file, os.O_RDONLY, 0600)
+	if err != nil {
+		log.Printf("Could not open file: %v\n", file)
+		return m
+	}
+	b := make([]byte, 19000)
+	n, err := f.Read(b)
+	s := string(b[0:n])
+	strings.Split(s, "\n")
+
+	for _, v := range strings.Split(s, "\n") {
+		ip := strings.Split(v, ":")[0]
+		v, found := m[ip]
+		if found {
+			m[ip] = v + 1
+		}
+		m[ip] = 0
+	}
+	return m
+
+}
+
+// TODO: Only full test need another...
 func TestFireWallSlave(t *testing.T) {
 
+	os.Remove("/tmp/firewall.cmd")
 	os.Remove(file)
 	f, _ := os.OpenFile(file,
 		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 
 	c := utils.ReadConfig("../fixtures/config.json")
+	// Changing log for our test
+	c.SearchLogs[0].Log = file
+
 	fw := &utils.Firewall{Config: c}
+
+	stageCmd := "echo  %v:  %v >>/tmp/firewall.cmd\n"
+	fwcmd := subscriber.CreateCmdS(stageCmd)
+	fw.SetCmdSlave(fwcmd)
+
 	fw.Read()
 	fw.Parse()
 
@@ -138,7 +176,9 @@ func TestFireWallSlave(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	expectedString := "  Write 0"
+	expectedString := "Apr 15 06:26:38 t sshd[12253]: Invalid user " +
+		"api from 8.199.139.46\n"
+
 	f.WriteString(expectedString)
 	f.Sync()
 	time.Sleep(3 * time.Second)
@@ -160,7 +200,9 @@ func TestFireWallSlave(t *testing.T) {
 	cmd.Watcher()
 	time.Sleep(1 * time.Second)
 
-	expectedString = "  test 2...."
+	expectedString = "Apr 15 06:26:38 t sshd[12253]: Invalid user " +
+		"api from 28.199.139.46\n"
+
 	f.WriteString(expectedString)
 	f.Sync()
 	time.Sleep(1 * time.Second)
@@ -175,11 +217,35 @@ func TestFireWallSlave(t *testing.T) {
 			m.GetB(), expectedString)
 	}
 
+	// Extra to investigate
+	expectedString = "Apr 15 06:26:38 t sshd[12253]: Invalid user " +
+		"api from 128.199.139.46\n"
+
+	f.WriteString(expectedString)
+	f.Sync()
+	time.Sleep(1 * time.Second)
+
 	time.Sleep(4 * time.Second)
 	cmd.Stop()
 
 	time.Sleep(3 * time.Second)
 	os.Remove(file)
+
+	mapResult := mapOfOuput("/tmp/firewall.cmd")
+
+	expectedMap := map[string]int{
+		"8.199.139.46":   0,
+		"28.199.139.46":  0,
+		"128.199.139.46": 0,
+		"":               0, // Extra Return
+	}
+
+	if !reflect.DeepEqual(mapResult, expectedMap) {
+
+		t.Errorf("Output incorrect: "+
+			"mapResult: %v,  expectedMap: %v\n", mapResult,
+			expectedMap)
+	}
 
 }
 
