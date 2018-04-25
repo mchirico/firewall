@@ -85,9 +85,9 @@ func (cmd *CMD) Watcher() {
 		for {
 			select {
 			case event := <-watcher.Events:
-				log.Println("event:", event)
+				//log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					log.Println("modified file:", event.Name)
+					//log.Println("modified file:", event.Name)
 					go cmd.CmdWrite(event.Name)
 				}
 				if event.Op&fsnotify.Rename == fsnotify.Rename {
@@ -149,6 +149,12 @@ func (cmd *CMD) Watcher() {
 
 }
 
+type WatchFuncExec interface {
+	WriteEvent(event string)
+	AllEvents(event string)
+	Tick(event string)
+}
+
 // MC --
 type MC struct {
 	sync.Mutex
@@ -163,6 +169,7 @@ type MC struct {
 	removeOrRename bool
 	events         map[string]time.Time
 	allEvents      []EventMap
+	Slave          WatchFuncExec
 }
 
 // EventMap --
@@ -178,9 +185,9 @@ type MCError struct {
 }
 
 // NewMC --
-func NewMC(file string) *MC {
+func NewMC(file string, slave WatchFuncExec) *MC {
 	return &MC{file: file, events: map[string]time.Time{},
-		allEvents: []EventMap{}}
+		allEvents: []EventMap{}, Slave: slave}
 }
 
 // Inc --
@@ -231,6 +238,12 @@ func (m *MC) GetB() []byte {
 	defer m.Unlock()
 	return m.b
 
+}
+
+func (m *MC) FireSlaveWriteEvent(event string) {
+	m.Lock()
+	defer m.Unlock()
+	go m.Slave.WriteEvent(event)
 }
 
 // StatusRemoveRename --
@@ -313,7 +326,8 @@ func (m *MC) Read() {
 	//m.f.Seek(m.ret,io.SeekStart)
 	n, err := m.f.Read(b)
 	if err != nil {
-		log.Println("Error in MC Read", err)
+		// TODO: You get a lot of hits here
+		// log.Println("Error in MC Read", err)
 		if err == io.EOF {
 			return
 		}
@@ -334,8 +348,9 @@ func (m *MC) Read() {
 func (m *MC) WriteEvent(event string) {
 
 	m.Read()
-	writes := m.Inc()
-	log.Println("(MC)YES!!", event, writes, string(m.GetB()))
+	m.Inc()
+	m.FireSlaveWriteEvent(event)
+	//log.Println("(MC)YES!!", event, writes, string(m.GetB()))
 
 }
 
@@ -343,7 +358,7 @@ func (m *MC) WriteEvent(event string) {
 func (m *MC) AllEvents(event string) {
 	m.AddEvent(event)
 	m.RemoveRename(event)
-	log.Println("All Events", event)
+	//log.Println("All Events", event)
 
 }
 

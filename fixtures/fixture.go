@@ -119,6 +119,7 @@ func LogRead(c utils.Config, bytesMax int64, logNum int) string {
 
 }
 
+// CopyStageFilesBeginEnd --
 func CopyStageFilesBeginEnd(begin int,
 	end int) {
 	c := UpdateConfigSettings()
@@ -129,7 +130,7 @@ func CopyStageFilesBeginEnd(begin int,
 
 }
 
-// CopyFileBeginEnd
+// CopyFileBeginEnd --
 func CopyFileBeginEnd(src string,
 	dst string,
 	begin int, end int) {
@@ -168,6 +169,7 @@ func CopyFileBeginEnd(src string,
 
 }
 
+// CreateStageFilesBeginEnd --
 func CreateStageFilesBeginEnd(begin int,
 	end int) {
 	c := UpdateConfigSettings()
@@ -218,6 +220,7 @@ func CreateFileBeginEnd(src string,
 
 }
 
+// CopyFile --
 func CopyFile(src string, dst string) {
 
 	s, err := os.OpenFile(src, os.O_CREATE|os.O_RDONLY, 0600)
