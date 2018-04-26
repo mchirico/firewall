@@ -102,11 +102,11 @@ func TestSubscriber_StagedRun(t *testing.T) {
 func TestCmdS_LoadFromFile(t *testing.T) {
 
 	file := "/tmp/loadLog.json"
-	os.Remove(file)
+
 	cmd := CreateCmdS("date >>/tmp/loadFromTest")
 	cmd.SetWriteLog(file)
 
-	f, _ := os.OpenFile(file, os.O_WRONLY|os.O_CREATE, 0600)
+	f, _ := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	f.WriteString(`{"10.23.4.20":[22,25,80]}`)
 	f.Close()
 

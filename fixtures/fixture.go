@@ -197,8 +197,7 @@ func CreateFileBeginEnd(src string,
 	}
 	defer s.Close()
 
-	os.Remove(dst)
-	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0600)
+	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return
 	}

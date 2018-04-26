@@ -205,8 +205,7 @@ func (s *Set) WriteToFile(file string) *Set {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
 
-	os.Remove(file)
-	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Printf("writeRecs OpenFile error %v", err)
 	}

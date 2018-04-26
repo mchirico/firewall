@@ -140,10 +140,10 @@ func TestCopyFileBeginEnd(t *testing.T) {
 
 	file := "./testF"
 	fileOut := "./testF.out"
-	os.Remove(file)
+
 	os.Remove(fileOut)
 
-	f, _ := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0600)
+	f, _ := os.OpenFile(file, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	f.WriteString("line 1\nline 2\nline 3\nline 4\n")
 	f.Close()
 

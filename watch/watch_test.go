@@ -34,14 +34,9 @@ func (t *T) OtherStuff() {
 
 func TestFileExist(t *testing.T) {
 	file := "../fixtures/junktest"
-	os.Remove(file)
-
-	if FileExist(file) {
-		t.Errorf("file should not exist")
-	}
 
 	f, err := os.OpenFile(file,
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0600)
 	if err != nil {
 		t.Errorf("Can't create test file")
 	}
@@ -56,9 +51,8 @@ func TestFileExist(t *testing.T) {
 
 func TestGeneralSlave(t *testing.T) {
 
-	os.Remove(file)
 	f, _ := os.OpenFile(file,
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0600)
 
 	slave := &T{}
 	m := NewMC(file, slave)
@@ -147,9 +141,9 @@ func mapOfOuput(file string) map[string]int {
 func TestFireWallSlave(t *testing.T) {
 
 	os.Remove("/tmp/firewall.cmd")
-	os.Remove(file)
+
 	f, _ := os.OpenFile(file,
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0600)
 
 	c := utils.ReadConfig("../fixtures/config.json")
 	// Changing log for our test
@@ -251,9 +245,8 @@ func TestFireWallSlave(t *testing.T) {
 
 func TestFileDeletedAndRestored(t *testing.T) {
 
-	os.Remove(file)
 	f, _ := os.OpenFile(file,
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0600)
 
 	slave := &T{}
 	m := NewMC(file, slave)
@@ -310,9 +303,9 @@ func TestFileDeletedAndRestored(t *testing.T) {
 }
 
 func TestMC_LastEvent(t *testing.T) {
-	os.Remove(file)
+
 	f, _ := os.OpenFile(file,
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0600)
 
 	slave := &T{}
 	m := NewMC(file, slave)

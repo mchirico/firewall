@@ -58,9 +58,9 @@ func mapOfOuput(file string) map[string]int {
 func TestFirewallWatch(t *testing.T) {
 
 	os.Remove("/tmp/firewall.cmd")
-	os.Remove(alertLogTestfile)
+
 	f, _ := os.OpenFile(alertLogTestfile,
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_TRUNC, 0600)
 
 	c := utils.ReadConfig("../../../fixtures/config.json")
 	// Changing log for our test

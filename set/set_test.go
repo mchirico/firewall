@@ -129,8 +129,8 @@ func TestSet_WriteAndLoadFromFile(t *testing.T) {
 	return
 
 	emptyFile := "/tmp/setTestempty"
-	os.Remove(emptyFile)
-	f, _ := os.OpenFile(emptyFile, os.O_CREATE|os.O_WRONLY, 0600)
+
+	f, _ := os.OpenFile(emptyFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	f.WriteString(`{"":[]}`)
 
 	empty := s2.LoadFromFile(emptyFile)
@@ -153,8 +153,7 @@ func TestSet_LoadFromFile(t *testing.T) {
 	s.Add(rec)
 	s.WriteToFile(emptyFile)
 
-	os.Remove(emptyFile)
-	f, _ := os.OpenFile(emptyFile, os.O_CREATE|os.O_WRONLY, 0600)
+	f, _ := os.OpenFile(emptyFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	f.WriteString(`{"100.200.3.4":[22,25,80]}`)
 	f.Close()
 
