@@ -351,7 +351,7 @@ func (m *MC) Read() {
 
 // No locks on functions below...
 
-// LogTest -- hold no locks on this one
+// WriteEvent -- hold no locks on this one
 func (m *MC) WriteEvent(event string) {
 
 	m.Read()

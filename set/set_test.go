@@ -164,3 +164,26 @@ func TestSet_LoadFromFile(t *testing.T) {
 	log.Printf("%v\n", s.Values())
 
 }
+
+func TestSet_DeleteKey(t *testing.T) {
+
+	rec := CreateIpRec("1.2.3.4", []int{22, 25, 80})
+	s := CreateS()
+	s.Add(rec)
+
+	intArray := s.DeleteKey("1.2.3.4")
+
+	expectedValue := []int{22, 25, 80}
+
+	if !reflect.DeepEqual(intArray, expectedValue) {
+		t.Errorf("Expected value: %v "+
+			"Observed value: %v\n", expectedValue, intArray)
+	}
+
+	if len(s.Values()) != 0 {
+		t.Errorf("Expected value: %v "+
+			"Observed value: %v\n", map[string]int{}, s.Values())
+	}
+	log.Printf("%v\n", s.Values())
+
+}

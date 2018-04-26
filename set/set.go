@@ -100,6 +100,19 @@ func (s *Set) Add(kv SetKV) *Set {
 	return s
 }
 
+// DeleteKey -- returns value
+func (s *Set) DeleteKey(key string) []int {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	setVal, found := s.set[key]
+	if found {
+		delete(s.set, key)
+		return setVal
+	}
+	return []int{}
+}
+
 // Union --
 func (s *Set) Union(s2 *Set) *Set {
 	s.Mutex.Lock()
