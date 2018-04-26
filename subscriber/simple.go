@@ -26,22 +26,55 @@ func Cmd(cmd string) {
 // Example of Command Structure (or maybe broker)
 type CmdS struct {
 	sync.Mutex
-	cmd      string
-	status   map[int]bool
-	createS  *set.Set
-	stageCmd string
-	logSet   string
-	exeEndS  string
-	tickMsg  string
+	cmd        string
+	status     map[int]bool
+	createS    *set.Set
+	whiteListS *set.Set
+	stageCmd   string
+	logSet     string
+	exeEndS    string
+	tickMsg    string
 }
 
 func CreateCmdS(stageCmd string) *CmdS {
 	c := &CmdS{}
 	c.createS = set.CreateS()
+	c.whiteListS = set.CreateS()
 	c.status = map[int]bool{}
 	c.stageCmd = stageCmd
 
 	return c
+}
+
+// SetWhiteListSet -- this makes a copy
+func (cmdS *CmdS) SetWhiteListSet(wS *set.Set) *CmdS {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+	cmdS.whiteListS = wS.Copy()
+	cmdS.createS = cmdS.createS.Difference(cmdS.whiteListS)
+
+	return cmdS
+
+}
+
+// CopySet -- this makes a copy
+func (cmdS *CmdS) SetSet(sS *set.Set) *CmdS {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+	cmdS.createS = sS.Copy()
+	return cmdS
+
+}
+
+// CopySet -- this makes a copy
+func (cmdS *CmdS) GopySet() *set.Set {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+	return cmdS.createS.Copy()
+
 }
 
 func (cmdS *CmdS) Build(i int, iprec IpRec) {

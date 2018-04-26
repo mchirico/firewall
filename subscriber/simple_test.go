@@ -8,6 +8,7 @@ import (
 	. "github.com/mchirico/firewall/fixtures"
 	"github.com/mchirico/firewall/utils"
 
+	"github.com/mchirico/firewall/set"
 	"log"
 	"os"
 	"reflect"
@@ -124,4 +125,20 @@ func TestCmdS_LoadFromFile(t *testing.T) {
 	}
 	log.Printf("%v:\n", cmd.Values())
 
+}
+
+func TestCmdS_SetWhiteListSet(t *testing.T) {
+
+	iprec := set.CreateIpRec("100.23.4.20", []int{22, 25, 80})
+	iprec2 := set.CreateIpRec("100.23.4.20", []int{443, 22, 25})
+	//iprecExpected := set.CreateIpRec("100.23.4.20", []int{80})
+
+	s := set.CreateS()
+	s2 := set.CreateS()
+
+	cmd := CreateCmdS("date >>/tmp/loadFromTest")
+	cmd.SetWhiteListSet(s)
+
+	s.Add(iprec)
+	s2.Add(iprec2)
 }
