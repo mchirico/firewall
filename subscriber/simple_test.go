@@ -8,7 +8,9 @@ import (
 	. "github.com/mchirico/firewall/fixtures"
 	"github.com/mchirico/firewall/utils"
 
+	"log"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -60,7 +62,12 @@ func TestSubscriber_StagedRun(t *testing.T) {
 	// Example of push in command
 	stageCmd := "echo  %v:  %v >>/tmp/firewall.cmd\n"
 	cmd := CreateCmdS(stageCmd)
+	cmd.SetWriteLog(c.OutputLog)
 	fw.SetCmdSlave(cmd)
+
+	// Careful with these deletes
+	os.Remove(c.OutputLog)
+	t.Log("c.OutputLog:", c.OutputLog)
 
 	fw.Read()
 	fw.Parse()
@@ -88,5 +95,33 @@ func TestSubscriber_StagedRun(t *testing.T) {
 	if checkForRepeats("/tmp/firewall.cmd") {
 		t.Errorf("repeats found in /tmp/firewall.cmd")
 	}
+
+}
+
+func TestCmdS_LoadFromFile(t *testing.T) {
+
+	file := "/tmp/loadLog.json"
+	os.Remove(file)
+	cmd := CreateCmdS("date >>/tmp/loadFromTest")
+	cmd.SetWriteLog(file)
+
+	f, _ := os.OpenFile(file, os.O_WRONLY|os.O_CREATE, 0600)
+	f.WriteString(`{"10.23.4.20":[22,25,80]}`)
+	f.Close()
+
+	expectedOutput := map[string][]int{"10.23.4.20": {22, 25, 80}}
+
+	if reflect.DeepEqual(cmd.Values(), expectedOutput) {
+		t.Errorf("No match %v %v", cmd.Values(),
+			expectedOutput)
+	}
+
+	cmd.LoadFromFile()
+
+	if !reflect.DeepEqual(cmd.Values(), expectedOutput) {
+		t.Errorf("No match %v %v", cmd.Values(),
+			expectedOutput)
+	}
+	log.Printf("%v:\n", cmd.Values())
 
 }

@@ -158,6 +158,18 @@ func (cmdS *CmdS) Exe(i int) {
 	cmdS.status[i] = true
 }
 
+func (cmdS *CmdS) ExeEnd(s string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+}
+
+func (cmdS *CmdS) Tick(s string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+}
+
 func checkForRepeats(file string) bool {
 	f, err := os.OpenFile(file, os.O_RDONLY, 0600)
 	if err != nil {

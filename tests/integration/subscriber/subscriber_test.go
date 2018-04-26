@@ -70,6 +70,11 @@ func TestFirewallWatch(t *testing.T) {
 
 	stageCmd := "echo  %v:  %v >>/tmp/firewall.cmd\n"
 	fwcmd := subscriber.CreateCmdS(stageCmd)
+
+	// Normally command below; however, for test directories
+	// are relative
+	//     fwcmd.SetWriteLog(c.OutputLog)
+	fwcmd.SetWriteLog("../../../fixtures/firewall.json")
 	fw.SetCmdSlave(fwcmd)
 
 	fw.Read()
@@ -175,5 +180,7 @@ func TestFirewallWatch(t *testing.T) {
 			"mapResult: %v,  expectedMap: %v\n", mapResult,
 			expectedMap)
 	}
+
+
 
 }

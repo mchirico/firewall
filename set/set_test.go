@@ -3,6 +3,7 @@ package set
 import (
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -99,5 +100,67 @@ func TestSet_Copy(t *testing.T) {
 		t.Errorf("(Not Equal Test) Expected: %v Observed: %v\n", s,
 			s2)
 	}
+
+}
+
+func TestSet_WriteAndLoadFromFile(t *testing.T) {
+
+	iprecs := []*IpRec{}
+	s := CreateS()
+
+	for i := 10; i < 20; i++ {
+		ip := fmt.Sprintf("%d.23.4.20", i)
+		iprec := CreateIpRec(ip, []int{22, 25, 80})
+		iprecs = append(iprecs, iprec)
+		s.Add(iprec)
+	}
+
+	s.WriteToFile("/tmp/setTest")
+
+	s2 := CreateS()
+	s2.LoadFromFile("/tmp/setTest")
+
+	for _, iprec := range iprecs {
+		if !s2.In(iprec.IP) {
+			t.Errorf("Set not loaded\n")
+		}
+	}
+
+	return
+
+	emptyFile := "/tmp/setTestempty"
+	os.Remove(emptyFile)
+	f, _ := os.OpenFile(emptyFile, os.O_CREATE|os.O_WRONLY, 0600)
+	f.WriteString(`{"":[]}`)
+
+	empty := s2.LoadFromFile(emptyFile)
+	log.Printf("values: %v\n", empty.Values())
+
+	// Load Appends
+	for _, iprec := range iprecs {
+		if !s2.In(iprec.IP) {
+			t.Errorf("Set not loaded\n")
+		}
+	}
+
+}
+
+func TestSet_LoadFromFile(t *testing.T) {
+	emptyFile := "/tmp/setTestempty"
+	rec := CreateIpRec("1.2.3.4", []int{22, 25, 80})
+	s := CreateS()
+
+	s.Add(rec)
+	s.WriteToFile(emptyFile)
+
+	os.Remove(emptyFile)
+	f, _ := os.OpenFile(emptyFile, os.O_CREATE|os.O_WRONLY, 0600)
+	f.WriteString(`{"100.200.3.4":[22,25,80]}`)
+	f.Close()
+
+	s.Clear()
+	s.LoadFromFile(emptyFile)
+
+	log.Printf("%v\n", s.Values())
 
 }

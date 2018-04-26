@@ -250,6 +250,15 @@ func (fw *Firewall) FireCommand() {
 	// TODO: should have a check that we fired
 	//      successfully
 	fw.BadIP = []map[string]int{}
+	fw.cmdSlave.ExeEnd("FireCommand")
+}
+
+func (fw *Firewall) TickCommand(msg string) {
+	fw.Lock()
+	defer fw.Unlock()
+
+	fw.cmdSlave.Tick(msg)
+
 }
 
 // Do not lock these events
@@ -266,6 +275,7 @@ func (fw *Firewall) AllEvents(event string) {
 }
 
 func (fw *Firewall) Tick(event string) {
+	fw.TickCommand(event)
 	//log.Printf("Tick Tick: %v", event)
 }
 

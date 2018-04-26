@@ -247,6 +247,12 @@ func (m *MC) FireSlaveWriteEvent(event string) {
 	go m.Slave.WriteEvent(event)
 }
 
+func (m *MC) FireSlaveTickEvent(event string) {
+	m.Lock()
+	defer m.Unlock()
+	go m.Slave.Tick(event)
+}
+
 // StatusRemoveRename --
 func (m *MC) StatusRemoveRename() bool {
 	m.Lock()
@@ -366,6 +372,7 @@ func (m *MC) AllEvents(event string) {
 // Tick --
 func (m *MC) Tick(event string) {
 	m.TickUpdate()
+	m.FireSlaveTickEvent(event)
 	//log.Println("Tick", event, m.GetTick())
 
 }

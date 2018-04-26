@@ -30,6 +30,9 @@ type CmdS struct {
 	status   map[int]bool
 	createS  *set.Set
 	stageCmd string
+	logSet   string
+	exeEndS  string
+	tickMsg  string
 }
 
 func CreateCmdS(stageCmd string) *CmdS {
@@ -65,5 +68,57 @@ func (cmdS *CmdS) Exe(i int) {
 	cmdS.Lock()
 	defer cmdS.Unlock()
 	Cmd(cmdS.cmd)
+
 	cmdS.status[i] = true
+}
+
+func (cmdS *CmdS) SetWriteLog(file string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+	cmdS.logSet = file
+
+}
+
+func (cmdS *CmdS) WriteLog() {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+	if cmdS.logSet != "" {
+		cmdS.createS.WriteToFile(cmdS.logSet)
+	}
+}
+
+func (cmdS *CmdS) LoadFromFile() {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+	if cmdS.logSet != "" {
+		cmdS.createS.LoadFromFile(cmdS.logSet)
+	}
+}
+
+func (cmdS *CmdS) Values() map[string][]int {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+	return cmdS.createS.Values()
+
+}
+
+func (cmdS *CmdS) ExeEnd(s string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+	cmdS.exeEndS = s
+
+	// TODO: need better way
+	if cmdS.logSet != "" {
+		cmdS.createS.WriteToFile(cmdS.logSet)
+	}
+}
+
+func (cmdS *CmdS) Tick(s string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+	cmdS.tickMsg = s
+
+	log.Printf("subscriber Tick: %v\n", s)
+
 }
