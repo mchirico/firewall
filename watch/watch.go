@@ -52,6 +52,7 @@ func (cmd *CMD) Stop() {
 	cmd.done <- struct{}{}
 }
 
+// RestartCount --
 func (cmd *CMD) RestartCount() int64 {
 	cmd.Lock()
 	defer cmd.Unlock()
@@ -95,7 +96,7 @@ func (cmd *CMD) Watcher() {
 
 					if BackOffFileCheck(cmd.File) {
 						cmd.Lock()
-						cmd.restartCount += 1
+						cmd.restartCount++
 						watcher.Add(cmd.File)
 						cmd.Unlock()
 
@@ -106,7 +107,7 @@ func (cmd *CMD) Watcher() {
 
 					if BackOffFileCheck(cmd.File) {
 						cmd.Lock()
-						cmd.restartCount += 1
+						cmd.restartCount++
 						watcher.Add(cmd.File)
 						cmd.Unlock()
 
@@ -246,6 +247,12 @@ func (m *MC) FireSlaveWriteEvent(event string) {
 	go m.Slave.WriteEvent(event)
 }
 
+func (m *MC) FireSlaveTickEvent(event string) {
+	m.Lock()
+	defer m.Unlock()
+	go m.Slave.Tick(event)
+}
+
 // StatusRemoveRename --
 func (m *MC) StatusRemoveRename() bool {
 	m.Lock()
@@ -344,13 +351,13 @@ func (m *MC) Read() {
 
 // No locks on functions below...
 
-// LogTest -- hold no locks on this one
+// WriteEvent -- hold no locks on this one
 func (m *MC) WriteEvent(event string) {
 
 	m.Read()
 	m.Inc()
 	m.FireSlaveWriteEvent(event)
-	//log.Println("(MC)YES!!", event, writes, string(m.GetB()))
+	//log.Println("(MC)YES!!", event, string(m.GetB()))
 
 }
 
@@ -365,6 +372,7 @@ func (m *MC) AllEvents(event string) {
 // Tick --
 func (m *MC) Tick(event string) {
 	m.TickUpdate()
+	m.FireSlaveTickEvent(event)
 	//log.Println("Tick", event, m.GetTick())
 
 }

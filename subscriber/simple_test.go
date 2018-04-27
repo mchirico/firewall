@@ -8,7 +8,10 @@ import (
 	. "github.com/mchirico/firewall/fixtures"
 	"github.com/mchirico/firewall/utils"
 
+	"github.com/mchirico/firewall/set"
+	"log"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -49,7 +52,7 @@ func checkForRepeats(file string) bool {
 
 }
 
-func TestStagedRun(t *testing.T) {
+func TestSubscriber_StagedRun(t *testing.T) {
 
 	os.Remove("/tmp/firewall.cmd")
 	str := utils.SetLogging()
@@ -57,8 +60,15 @@ func TestStagedRun(t *testing.T) {
 
 	fw := &utils.Firewall{Config: c}
 
-	cmd := CreateCmdS()
+	// Example of push in command
+	stageCmd := "echo  %v:  %v >>/tmp/firewall.cmd\n"
+	cmd := CreateCmdS(stageCmd)
+	cmd.SetWriteLog(c.OutputLog)
 	fw.SetCmdSlave(cmd)
+
+	// Careful with these deletes
+	os.Remove(c.OutputLog)
+	t.Log("c.OutputLog:", c.OutputLog)
 
 	fw.Read()
 	fw.Parse()
@@ -76,10 +86,59 @@ func TestStagedRun(t *testing.T) {
 	}
 	b := make([]byte, 9000)
 	n, err := f.Read(b)
-	fmt.Printf("\nb=%v\n", string(b[0:n]))
+
+	if n > 100 {
+		fmt.Printf("\nb=%v\n", string(b[0:100]))
+	} else {
+		fmt.Printf("\nb=%v\n", string(b[0:n]))
+	}
 
 	if checkForRepeats("/tmp/firewall.cmd") {
 		t.Errorf("repeats found in /tmp/firewall.cmd")
 	}
 
+}
+
+func TestCmdS_LoadFromFile(t *testing.T) {
+
+	file := "/tmp/loadLog.json"
+
+	cmd := CreateCmdS("date >>/tmp/loadFromTest")
+	cmd.SetWriteLog(file)
+
+	f, _ := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	f.WriteString(`{"10.23.4.20":[22,25,80]}`)
+	f.Close()
+
+	expectedOutput := map[string][]int{"10.23.4.20": {22, 25, 80}}
+
+	if reflect.DeepEqual(cmd.Values(), expectedOutput) {
+		t.Errorf("No match %v %v", cmd.Values(),
+			expectedOutput)
+	}
+
+	cmd.LoadFromFile()
+
+	if !reflect.DeepEqual(cmd.Values(), expectedOutput) {
+		t.Errorf("No match %v %v", cmd.Values(),
+			expectedOutput)
+	}
+	log.Printf("%v:\n", cmd.Values())
+
+}
+
+func TestCmdS_SetWhiteListSet(t *testing.T) {
+
+	iprec := set.CreateIpRec("100.23.4.20", []int{22, 25, 80})
+	iprec2 := set.CreateIpRec("100.23.4.20", []int{443, 22, 25})
+	//iprecExpected := set.CreateIpRec("100.23.4.20", []int{80})
+
+	s := set.CreateS()
+	s2 := set.CreateS()
+
+	cmd := CreateCmdS("date >>/tmp/loadFromTest")
+	cmd.SetWhiteListSet(s)
+
+	s.Add(iprec)
+	s2.Add(iprec2)
 }

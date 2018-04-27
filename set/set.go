@@ -1,6 +1,10 @@
 package set
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"os"
 	"sort"
 	"sync"
 )
@@ -76,7 +80,7 @@ type Set struct {
 	set map[string][]int
 }
 
-// CreateS --
+// CreateS -- never lock this
 func CreateS() *Set {
 	return &Set{set: map[string][]int{}}
 }
@@ -94,6 +98,19 @@ func (s *Set) Add(kv SetKV) *Set {
 		s.set[kv.Key()] = kv.Val()
 	}
 	return s
+}
+
+// DeleteKey -- returns value
+func (s *Set) DeleteKey(key string) []int {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	setVal, found := s.set[key]
+	if found {
+		delete(s.set, key)
+		return setVal
+	}
+	return []int{}
 }
 
 // Union --
@@ -161,7 +178,7 @@ func (s *Set) Values() map[string][]int {
 	return t
 }
 
-// Copy --
+// Copy -- copy and not reference
 func (s *Set) Copy() *Set {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
@@ -171,6 +188,56 @@ func (s *Set) Copy() *Set {
 		t.set[k] = v
 	}
 	return t
+}
+
+// Clear -- empties set
+func (s *Set) Clear() *Set {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	t := CreateS()
+	s.set = t.set
+	return s
+}
+
+// WriteToFile --
+func (s *Set) WriteToFile(file string) *Set {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	f, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Printf("writeRecs OpenFile error %v", err)
+	}
+	defer f.Close()
+
+	setJson, _ := json.Marshal(s.set)
+	f.Write(setJson)
+
+	return s
+}
+
+// LoadFromFile -- appends values
+func (s *Set) LoadFromFile(file string) *Set {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	f, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Printf("writeRecs OpenFile error %v", err)
+		return s
+	}
+
+	err = json.Unmarshal(f, &s.set)
+	if err != nil {
+		log.Printf("\nLoadFromFile: %v\n", err)
+	}
+
+	for k, v := range s.set {
+		log.Printf("values: %v:%v", k, v)
+	}
+
+	return s
 }
 
 // CreateIpRec --
