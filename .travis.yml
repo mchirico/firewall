@@ -25,7 +25,6 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_7bee5ceae7dc_key -iv $encrypted_7bee5ceae7dc_iv
   -in fixtures/stage.tar.enc -out fixtures/stage.tar -d
 - cd fixtures && tar xvf stage.tar
-
 - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
   > ./cc-test-reporter
 - chmod +x ./cc-test-reporter
