@@ -19,6 +19,8 @@ import (
 
 var MaxFileSize = 5000000
 
+var LogMsg = false
+
 // Cmd to execute
 func Cmd(cmd string) {
 
@@ -102,8 +104,11 @@ func (fw *Firewall) Read() {
 		n, err := f.Read(b)
 		if err != nil {
 			fw.LogData = append(fw.LogData, []byte{})
-			log.Printf("Error Reading file" +
-				" in read Read")
+
+			if LogMsg {
+				log.Printf("Error Reading file" +
+					" in read Read")
+			}
 			continue
 		}
 		fw.LogData = append(fw.LogData, b[0:n])
@@ -222,22 +227,38 @@ func (fw *Firewall) ReadRecs() []include.IpRec {
 	return iprecs
 }
 
-// FireCommand -- you'll need to take this out
+// FireCommand --
 func (fw *Firewall) FireCommand() {
 	fw.Lock()
 	defer fw.Unlock()
 	iprecs := fw.createIpRec()
+
 	for i, j := range iprecs {
 
 		if fw.cmdSlave != nil {
+			log.Printf("firewall: Build/Exe" +
+				"\n\n")
 			fw.cmdSlave.Build(i, j)
 			fw.cmdSlave.Exe(i)
+
 		} else {
-			//log.Printf("fw.cmdSlave nil -- " +
-			//	"nothing to fire")
+			log.Printf("fw.cmdSlave nil -- " +
+				"nothing to fire")
 		}
 
 	}
+	// TODO: should have a check that we fired
+	//      successfully
+	fw.BadIP = []map[string]int{}
+	fw.cmdSlave.ExeEnd("FireCommand")
+}
+
+func (fw *Firewall) TickCommand(msg string) {
+	fw.Lock()
+	defer fw.Unlock()
+
+	fw.cmdSlave.Tick(msg)
+
 }
 
 // Do not lock these events
@@ -254,6 +275,7 @@ func (fw *Firewall) AllEvents(event string) {
 }
 
 func (fw *Firewall) Tick(event string) {
+	fw.TickCommand(event)
 	//log.Printf("Tick Tick: %v", event)
 }
 

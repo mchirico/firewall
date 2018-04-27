@@ -11,4 +11,6 @@ type IpRec struct {
 type CmdSlave interface {
 	Build(int, IpRec)
 	Exe(int)
+	ExeEnd(string)
+	Tick(string)
 }

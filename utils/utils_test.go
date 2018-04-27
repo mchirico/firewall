@@ -158,6 +158,18 @@ func (cmdS *CmdS) Exe(i int) {
 	cmdS.status[i] = true
 }
 
+func (cmdS *CmdS) ExeEnd(s string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+}
+
+func (cmdS *CmdS) Tick(s string) {
+	cmdS.Lock()
+	defer cmdS.Unlock()
+
+}
+
 func checkForRepeats(file string) bool {
 	f, err := os.OpenFile(file, os.O_RDONLY, 0600)
 	if err != nil {
@@ -207,7 +219,12 @@ func TestStagedRun(t *testing.T) {
 	}
 	b := make([]byte, 9000)
 	n, err := f.Read(b)
-	fmt.Printf("\nb=%v\n", string(b[0:n]))
+
+	if n > 100 {
+		fmt.Printf("\nb=%v\n", string(b[0:100]))
+	} else {
+		fmt.Printf("\nb=%v\n", string(b[0:n]))
+	}
 
 	if checkForRepeats("/tmp/firewall.cmd") {
 		t.Errorf("repeats found in /tmp/firewall.cmd")
