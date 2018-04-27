@@ -1,9 +1,9 @@
 package logger
 
 import (
+	"io"
 	"testing"
 	"time"
-	"io"
 )
 
 var W io.Writer

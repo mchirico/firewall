@@ -99,6 +99,6 @@ func (lg *Logger) Write(msg string) {
 	}
 }
 
-func (l *Logger)Writer() io.Writer {
+func (l *Logger) Writer() io.Writer {
 	return l.w
 }
