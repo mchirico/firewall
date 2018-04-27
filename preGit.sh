@@ -14,6 +14,7 @@ gofmt -s -w watch/watch.go
 gofmt -s -w watch/watch_test.go
 gofmt -s -w tests/integration/simple/*
 gofmt -s -w include/*
+gofmt -s -w logger/*
 
 gofmt -s -w firewall/*.go
 gofmt -s -w fixtures/*.go
@@ -28,6 +29,7 @@ go test -race -v  -coverprofile=c0.out -covermode=atomic github.com/mchirico/fir
 go test -race -v  -coverprofile=c0.out -covermode=atomic github.com/mchirico/firewall/tests/integration/simple
 go test -race -v  -coverprofile=c0.out -covermode=atomic github.com/mchirico/firewall/set
 go test -race -v  -coverprofile=c0.out -covermode=atomic github.com/mchirico/firewall/subscriber
+go test -race -v  -coverprofile=c0.out -covermode=atomic github.com/mchirico/firewall/logger
 
 #go test -race -v -coverprofile=c1.out -covermode=atomic github.com/mchirico/gcpso/utils
 sleep 3
