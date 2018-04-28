@@ -14,7 +14,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/430eb60db8157c845780/maintainability)](https://codeclimate.com/github/mchirico/firewall/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/430eb60db8157c845780/test_coverage)](https://codeclimate.com/github/mchirico/firewall/test_coverage)
 [![codecov](https://codecov.io/gh/mchirico/firewall/branch/master/graph/badge.svg)](https://codecov.io/gh/mchirico/firewall)
-
+![Release](https://img.shields.io/badge/release%20level-alpha-yellow.svg?style=flat)
 
 <img alt="CWXSTAT" src="https://storage.googleapis.com/montco-stats/cwxstat2.svg" width="100px">
 
